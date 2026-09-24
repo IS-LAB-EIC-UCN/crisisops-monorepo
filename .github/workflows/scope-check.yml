@@ -1,0 +1,19 @@
+name: Scope check
+
+on:
+  pull_request:
+    branches: [develop, main]
+
+jobs:
+  scope:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Validate group scope
+        run: >-
+          python scripts/check_scope.py
+          "${{ github.head_ref }}"
+          "${{ github.event.pull_request.base.sha }}"
+          "${{ github.event.pull_request.head.sha }}"

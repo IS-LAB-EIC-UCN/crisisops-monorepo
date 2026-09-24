@@ -1,0 +1,31 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: crisisops
+      POSTGRES_USER: crisisops
+      POSTGRES_PASSWORD: crisisops
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U crisisops -d crisisops"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - crisisops_pgdata:/var/lib/postgresql/data
+
+  api:
+    build: .
+    environment:
+      APP_NAME: CrisisOps
+      APP_ENV: development
+      DATABASE_URL: postgresql+psycopg://crisisops:crisisops@db:5432/crisisops
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  crisisops_pgdata:

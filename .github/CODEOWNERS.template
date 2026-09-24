@@ -1,0 +1,28 @@
+# Reemplazar TU_ORG por el nombre real de la organización de GitHub y renombrar
+# este archivo a .github/CODEOWNERS.
+
+# Subproyectos
+/src/crisisops/modules/emergencies/  @TU_ORG/grupo-a @TU_ORG/docentes
+/tests/emergencies/                  @TU_ORG/grupo-a @TU_ORG/docentes
+/src/crisisops/modules/resources/    @TU_ORG/grupo-b @TU_ORG/docentes
+/tests/resources/                    @TU_ORG/grupo-b @TU_ORG/docentes
+/src/crisisops/modules/personnel/    @TU_ORG/grupo-c @TU_ORG/docentes
+/tests/personnel/                    @TU_ORG/grupo-c @TU_ORG/docentes
+/src/crisisops/modules/operations/   @TU_ORG/grupo-d @TU_ORG/docentes
+/tests/operations/                   @TU_ORG/grupo-d @TU_ORG/docentes
+/src/crisisops/modules/evacuation/   @TU_ORG/grupo-e @TU_ORG/docentes
+/tests/evacuation/                   @TU_ORG/grupo-e @TU_ORG/docentes
+
+# Código y configuración común
+/src/crisisops/core/                 @TU_ORG/arquitectura @TU_ORG/docentes
+/src/crisisops/shared/               @TU_ORG/arquitectura @TU_ORG/docentes
+/src/crisisops/main.py               @TU_ORG/arquitectura @TU_ORG/docentes
+/migrations/                         @TU_ORG/arquitectura @TU_ORG/docentes
+/docs/governance/                    @TU_ORG/arquitectura @TU_ORG/docentes
+/pyproject.toml                      @TU_ORG/arquitectura @TU_ORG/docentes
+/alembic.ini                         @TU_ORG/arquitectura @TU_ORG/docentes
+/docker-compose.yml                  @TU_ORG/arquitectura @TU_ORG/docentes
+/Dockerfile                          @TU_ORG/arquitectura @TU_ORG/docentes
+
+# Gobierno del repositorio
+/.github/                            @TU_ORG/docentes
