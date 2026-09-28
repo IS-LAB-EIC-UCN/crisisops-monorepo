@@ -4,7 +4,6 @@ import subprocess
 import sys
 from pathlib import PurePosixPath
 
-
 SCOPES = {
     "gA": (
         "src/crisisops/modules/emergencies/",
