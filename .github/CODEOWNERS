@@ -1,0 +1,67 @@
+# ============================================================
+# CODEOWNERS - CrisisOps Monorepo
+# Organización: IS-LAB-EIC-UCN
+#
+# Copiar este archivo como:
+#   .github/CODEOWNERS
+#
+# IMPORTANTE:
+# - Los nombres de equipo deben coincidir con sus slugs de GitHub.
+# - El ruleset de develop/main debe exigir Code Owner review.
+# ============================================================
+
+# Todo archivo no cubierto explícitamente queda bajo revisión docente.
+* @IS-LAB-EIC-UCN/profesor
+
+
+# ============================================================
+# SUBPROYECTOS
+# ============================================================
+
+# Grupo A - Emergencias
+/src/crisisops/modules/emergencies/  @IS-LAB-EIC-UCN/grupo-a @IS-LAB-EIC-UCN/profesor
+/tests/emergencies/                  @IS-LAB-EIC-UCN/grupo-a @IS-LAB-EIC-UCN/profesor
+
+# Grupo B - Recursos
+/src/crisisops/modules/resources/    @IS-LAB-EIC-UCN/grupo-b @IS-LAB-EIC-UCN/profesor
+/tests/resources/                    @IS-LAB-EIC-UCN/grupo-b @IS-LAB-EIC-UCN/profesor
+
+# Grupo C - Personal
+/src/crisisops/modules/personnel/    @IS-LAB-EIC-UCN/grupo-c @IS-LAB-EIC-UCN/profesor
+/tests/personnel/                    @IS-LAB-EIC-UCN/grupo-c @IS-LAB-EIC-UCN/profesor
+
+# Grupo D - Operaciones / Misiones
+/src/crisisops/modules/operations/   @IS-LAB-EIC-UCN/grupo-d @IS-LAB-EIC-UCN/profesor
+/tests/operations/                   @IS-LAB-EIC-UCN/grupo-d @IS-LAB-EIC-UCN/profesor
+
+# Grupo E - Evacuación / Refugios
+/src/crisisops/modules/evacuation/   @IS-LAB-EIC-UCN/grupo-e @IS-LAB-EIC-UCN/profesor
+/tests/evacuation/                   @IS-LAB-EIC-UCN/grupo-e @IS-LAB-EIC-UCN/profesor
+
+
+# ============================================================
+# ARQUITECTURA Y ELEMENTOS COMUNES
+# ============================================================
+
+/src/crisisops/core/                 @IS-LAB-EIC-UCN/arquitectura @IS-LAB-EIC-UCN/profesor
+/src/crisisops/shared/               @IS-LAB-EIC-UCN/arquitectura @IS-LAB-EIC-UCN/profesor
+/src/crisisops/main.py               @IS-LAB-EIC-UCN/arquitectura @IS-LAB-EIC-UCN/profesor
+
+/migrations/                         @IS-LAB-EIC-UCN/arquitectura @IS-LAB-EIC-UCN/profesor
+/docs/adr/                           @IS-LAB-EIC-UCN/arquitectura @IS-LAB-EIC-UCN/profesor
+/docs/governance/                    @IS-LAB-EIC-UCN/arquitectura @IS-LAB-EIC-UCN/profesor
+/ARCHITECTURE.md                     @IS-LAB-EIC-UCN/arquitectura @IS-LAB-EIC-UCN/profesor
+
+/alembic.ini                         @IS-LAB-EIC-UCN/arquitectura @IS-LAB-EIC-UCN/profesor
+/pyproject.toml                      @IS-LAB-EIC-UCN/arquitectura @IS-LAB-EIC-UCN/profesor
+/docker-compose.yml                  @IS-LAB-EIC-UCN/arquitectura @IS-LAB-EIC-UCN/profesor
+/Dockerfile                          @IS-LAB-EIC-UCN/arquitectura @IS-LAB-EIC-UCN/profesor
+
+
+# ============================================================
+# GOBIERNO DEL REPOSITORIO - SOLO PROFESOR
+# ============================================================
+
+/.github/                            @IS-LAB-EIC-UCN/profesor
+/scripts/check_scope.py              @IS-LAB-EIC-UCN/profesor
+/CONTRIBUTING.md                     @IS-LAB-EIC-UCN/profesor

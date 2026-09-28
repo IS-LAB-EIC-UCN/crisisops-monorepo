@@ -2,18 +2,36 @@ name: Scope check
 
 on:
   pull_request:
-    branches: [develop, main]
+    branches:
+      - develop
+
+permissions:
+  contents: read
 
 jobs:
   scope:
+    name: scope
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Load trusted scope validator from develop
+        run: |
+          git show "${{ github.event.pull_request.base.sha }}:scripts/check_scope.py" \
+            > /tmp/check_scope.py
+
       - name: Validate group scope
         run: >-
-          python scripts/check_scope.py
+          python /tmp/check_scope.py
           "${{ github.head_ref }}"
           "${{ github.event.pull_request.base.sha }}"
           "${{ github.event.pull_request.head.sha }}"
