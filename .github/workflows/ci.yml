@@ -2,21 +2,37 @@ name: CI
 
 on:
   pull_request:
+    branches:
+      - develop
+      - main
   push:
-    branches: [main, develop]
+    branches:
+      - develop
+      - main
+
+permissions:
+  contents: read
 
 jobs:
   quality:
+    name: quality
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: pip
-      - name: Install
+
+      - name: Install dependencies
         run: python -m pip install -e ".[dev]"
+
       - name: Lint
-        run: ruff check src tests
+        run: ruff check src tests scripts
+
       - name: Tests
         run: pytest --cov=crisisops --cov-report=term-missing
