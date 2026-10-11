@@ -37,7 +37,7 @@ class Emergency(Base):
     #Descripción detallada de la emergencia
     description : Mapped[str] = mapped_column(Text, nullable=True)
     #Locación de la emergencia
-    location_description: Mapped[str] = mapped_column(String(250), nullable=False)
+    location_description: Mapped[str] = mapped_column(String(250), nullable=True)
     #Status de la emergencia, los valores que pueden tomar estan estandarizados en la clase EmergencyStatus
     status: Mapped[EmergencyStatus] = mapped_column(_enum_column(EmergencyStatus, 20), nullable=False, default=EmergencyStatus.REPORTED)
     #Quien es el que reporta. Sirve para la trazabilidad. como la creación de una tabla Usuarios requiere la coordinación de los demas modulos, por ahora utilizamos reported_by (un string).
