@@ -35,12 +35,12 @@ class Emergency(Base):
     #detalles del tipo de emergencia, en el caso que el type anterior sea "OTHER", por lo que se debe indicar que tipo de emergencia es.
     type_detail: Mapped[str|None] = mapped_column(String(200), nullable=True)
     #Descripción detallada de la emergencia
-    description : Mapped[str] = mapped_column(Text, nullable=False)
+    description : Mapped[str] = mapped_column(Text, nullable=True)
     #Locación de la emergencia
     location_description: Mapped[str] = mapped_column(String(250), nullable=False)
     #Status de la emergencia, los valores que pueden tomar estan estandarizados en la clase EmergencyStatus
     status: Mapped[EmergencyStatus] = mapped_column(_enum_column(EmergencyStatus, 20), nullable=False, default=EmergencyStatus.REPORTED)
-    #Quien es el que reporte, sirve para la trazabilidad, como la creación de una tabla Usuarios requiere la coordinación de los demas modulos, por ahora utilizamos reported_by (un string).
+    #Quien es el que reporta. Sirve para la trazabilidad. como la creación de una tabla Usuarios requiere la coordinación de los demas modulos, por ahora utilizamos reported_by (un string).
     reported_by: Mapped[str] = mapped_column(String(120), nullable=False)
     #Fecha de creación para llevar trazabilidad.
     created_at: Mapped[datetime] =  mapped_column(DateTime(timezone=True), default=_utcnow, nullable=False)
