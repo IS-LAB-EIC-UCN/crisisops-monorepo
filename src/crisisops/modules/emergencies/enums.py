@@ -17,3 +17,9 @@ class EmergencyStatus(StrEnum):
     CONTROLLED = "CONTROLLED"
     CLOSED = "CLOSED"
     CANCELLED = "CANCELLED"
+
+class Role(StrEnum):
+    #Por ahora solo operador porque  debemos definir que otros 
+    #roles puede tener el sistema
+
+    OPERATOR = "OPERATOR"

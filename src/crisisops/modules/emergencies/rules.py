@@ -26,7 +26,7 @@ def find_field_issues(emergency: Emergency) -> list[FieldIssue]:
         value = getattr(emergency, name, None)
         #si es faltante
         if value is None or not value.strip():
-            issues.append(FieldIssue(name, "faltante", "es obligatorio"))
+            issues.append(FieldIssue(name, "faltante",  "es obligatorio"))
         #si no cumple el largo minimo
         elif len(value.strip()) < min_length:
             issues.append(FieldIssue(name, "demasiado_corto", f"debe tener al menos {min_length} caracteres"))
@@ -35,6 +35,6 @@ def find_field_issues(emergency: Emergency) -> list[FieldIssue]:
     if emergency.type == EmergencyType.OTHER and not (Emergency.type_detail or "").strip():
         issues.append(FieldIssue("type_detail", "requerido_cuando_other", "es obligatorio si type=OTHER"))
 
-        return issues
+    return issues
 
 
