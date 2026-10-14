@@ -31,6 +31,9 @@ class Emergency(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     #Tipo de emergencia, con valores estandarizados en EmergencyType
+
+    title: Mapped[str] = mapped_column(String(60), nullable=True)
+    
     type: Mapped[EmergencyType] = mapped_column(_enum_column(EmergencyType,30), nullable=False)
     #detalles del tipo de emergencia, en el caso que el type anterior sea "OTHER", por lo que se debe indicar que tipo de emergencia es.
     type_detail: Mapped[str|None] = mapped_column(String(200), nullable=True)
