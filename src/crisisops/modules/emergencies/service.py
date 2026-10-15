@@ -5,7 +5,7 @@ from functools import wraps
 from collections.abc import Callable
 from crisisops.modules.emergencies.enums import Role
 from crisisops.modules.emergencies.models import Emergency
-from crisisops.modules.emergencies.schemas import ValidationDecision
+from crisisops.modules.emergencies.schemas import ValidationDecision, EmergencyCreate
 from crisisops.modules.emergencies.exceptions import ExceptionalActionRequiresJustification,InvalidStateTransition,EmergencyNotFound,UnauthorizedAction,MissingRequiredData
 from crisisops.modules.emergencies.repository import EmergenciesRepository
 
@@ -29,14 +29,14 @@ LO DEJO TODO COMENTADO  PARA ANALIZARLO Y DECIDIR SI SE OCUPA O SE BUSCA OTRA FO
 QUE REQUIERE INTERACTUAR CON LA BASE DE DATOS Y POSIBLE ERRORES.
 '''
 
-'''
+
 P = ParamSpec("P")
 R = TypeVar("R")
 
 def _transactional(func: Callable[P,R]) -> Callable[P,R]:
 
     @wraps(func)
-    def wrapper(self: "EmergenciisService", *args: P.args, **kwargs: P.kwargs) -> R:
+    def wrapper(self: "EmergenciesService", *args: P.args, **kwargs: P.kwargs) -> R:
         try:
             result = func(self, *args, **kwargs) #ejercita el método original
             self.db.commit() #Si no hubo error, confirma los cambios
@@ -45,7 +45,7 @@ def _transactional(func: Callable[P,R]) -> Callable[P,R]:
             self.db.rollback() #si hubo culquier error, deshace todo
             raise #y vuelve lanzar el mismo error
     return wrapper
-'''
+
 VALIDATE_ROLES = (Role.OPERATOR)
 
 
@@ -95,5 +95,24 @@ class EmergenciesService:
         emergency.status = target
         
         return emergency
+
+    #función para registrar una emergencia
+    @_transactional
+    def create_emergency(self, payload: EmergencyCreate) -> Emergency:
         
+        emergency = Emergency(
+            title = payload.title,
+            type = payload.type,
+            description = payload.description,
+            severity = payload.severity,
+            location_description = payload.location_description,
+            status = EmergencyStatus.REPORTED,
+            reported_by = payload.reported_by
+
+        )
+
+        self.repo.add(emergency)
+
+        return emergency
+
     

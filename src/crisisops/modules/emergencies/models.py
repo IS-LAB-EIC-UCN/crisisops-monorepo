@@ -10,7 +10,7 @@ from sqlalchemy import Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column
 
 from crisisops.core.database import Base
-from crisisops.modules.emergencies.enums import EmergencyStatus, EmergencyType
+from crisisops.modules.emergencies.enums import EmergencyStatus, EmergencyType, Severity
 
 def _utcnow() -> datetime:
     return datetime.now(UTC)
@@ -39,6 +39,8 @@ class Emergency(Base):
     type_detail: Mapped[str|None] = mapped_column(String(200), nullable=True)
     #Descripción detallada de la emergencia
     description : Mapped[str] = mapped_column(Text, nullable=True)
+    #severida de la emergencia
+    severity : Mapped[Severity] = mapped_column(_enum_column(Severity,30), nullable=True)
     #Locación de la emergencia
     location_description: Mapped[str] = mapped_column(String(250), nullable=True)
     #Status de la emergencia, los valores que pueden tomar estan estandarizados en la clase EmergencyStatus

@@ -2,8 +2,8 @@ from dataclasses import dataclass
 from crisisops.modules.emergencies.enums import EmergencyType
 from crisisops.modules.emergencies.models import Emergency
 #Estos son los campos necesarios para la validación, se puede agregar mas
-#Se dejaron description y location_description por ahora.
-MIN_LENGTH_BY_FIELD = {"description": 50, "location_description":10}
+#Se dejaron description, location_description, title por ahora.
+MIN_LENGTH_BY_FIELD = {"description": 50, "location_description":10, "title":40}
 
 #Se usa dataclasses para que sea mas ordenado y frozen=True para que el objeto
 #sea solo de lectura, no se pueda modificar despues.
@@ -13,7 +13,7 @@ class FieldIssue:
     #code, ayuda para cuando el que llame la función sepa el porque habia problemas
     #con el campo X, o por que esa faltante o porque no cumplia el minimo de largo
     #Por ahora puede tomar 3 valores falante, demasiado_corto o requerido_cuando_OTHER
-    code: str
+    code: str 
     message: str
 
 def find_field_issues(emergency: Emergency) -> list[FieldIssue]:

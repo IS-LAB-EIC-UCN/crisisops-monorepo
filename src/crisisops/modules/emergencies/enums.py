@@ -23,3 +23,9 @@ class Role(StrEnum):
     #roles puede tener el sistema
 
     OPERATOR = "OPERATOR"
+
+class Severity(StrEnum):
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+    CRITICAL = "CRITICAL"

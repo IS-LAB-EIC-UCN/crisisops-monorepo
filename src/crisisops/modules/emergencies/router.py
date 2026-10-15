@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status
 from crisisops.core.database import get_db
 from crisisops.modules.emergencies.service import EmergenciesService
 from crisisops.modules.emergencies.enums import Role
-from crisisops.modules.emergencies.schemas import ValidationDecision, EmergencyRead
+from crisisops.modules.emergencies.schemas import ValidationDecision, EmergencyRead, EmergencyCreate
 from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/emergencies", tags=["Grupo A - Emergencias y evaluación"])
@@ -43,6 +43,24 @@ def validate_emergency(
     #que valida lo que se devuelve.
     emergency = EmergenciesService(db).validate_emergency(emergency_id, payload,actor_role)
     return EmergencyRead.model_validate(emergency) #se valida
+
+@router.post(
+    "", 
+    response_model=EmergencyRead,
+    status_code=status.HTTP_201_CREATED,
+    summary="Crear una emergencia",
+    description = "Se crea una emergencia, se envia la información y valida a travez de EmergencyCreate con pydance"
+)
+
+def create_emergency(
+    payload: EmergencyCreate,
+    db: Session = Depends(get_db)
+) -> EmergencyRead:
+    emergency = EmergenciesService(db).create_emergency(payload)
+    return EmergencyRead.model_validate(emergency)
     
+
+
+
 
 

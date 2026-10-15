@@ -1,5 +1,6 @@
 from crisisops.modules.emergencies.models import Emergency
 from sqlalchemy.orm import Session
+from crisisops.modules.emergencies.schemas import ValidationDecision, EmergencyCreate
 
 class EmergenciesRepository:
     """Acceso a persistencia del módulo emergencies."""
@@ -8,3 +9,9 @@ class EmergenciesRepository:
 
     def get(self, emergency_id: int)-> Emergency | None:
         return self.db.get(Emergency, emergency_id)
+
+    def add(self,emergency: EmergencyCreate) -> Emergency:
+        self.db.add(emergency)
+        self.db.flush()
+
+        return emergency
