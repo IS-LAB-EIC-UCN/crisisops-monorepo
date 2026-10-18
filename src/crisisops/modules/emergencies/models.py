@@ -11,6 +11,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from crisisops.core.database import Base
 from crisisops.modules.emergencies.enums import EmergencyStatus, EmergencyType
+from crisisops.shared.enums import Severity
 
 def _utcnow() -> datetime:
     return datetime.now(UTC)
@@ -32,6 +33,8 @@ class Emergency(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     #Tipo de emergencia, con valores estandarizados en EmergencyType
     type: Mapped[EmergencyType] = mapped_column(_enum_column(EmergencyType,30), nullable=False)
+    #Titulo de la emergencia para tener una primera proximación de la emergencia
+    title: Mapped[str] = mapped_column(String(60), nullable=True)
     #detalles del tipo de emergencia, en el caso que el type anterior sea "OTHER", por lo que se debe indicar que tipo de emergencia es.
     type_detail: Mapped[str|None] = mapped_column(String(200), nullable=True)
     #Descripción detallada de la emergencia
