@@ -16,13 +16,14 @@ class EmergencyCreate(BaseModel):
     type_detail: str|None = Field(
         default=None, max_length=150, description="Requerido/util cuando type=OTHER"
     )
-    title: str = Field(min_length=5, max_length=150)
+    title: str | None = Field(default=None,min_length=5, max_length=150)
 
-    description: str | None = Field(min_length=10)
+    description: str | None = Field(default=None,min_length=10)
 
-    severity : Severity | None 
+    severity : Severity | None = None
 
     location_description: str | None = Field(
+        default=None,
         min_length=3,
         max_length=250,
         description="Ubicacion"
@@ -39,7 +40,7 @@ class EmergencyRead(BaseModel):
     title: str | None
     type_detail: str | None
     description: str | None
-    severity: Severity
+    severity: Severity | None
     location_description: str | None
     status: EmergencyStatus
     reported_by: str

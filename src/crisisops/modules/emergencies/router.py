@@ -23,7 +23,7 @@ def module_health() -> dict[str, str]:
 )
 
 def create_emegency(
-    payload = EmergencyCreate,
+    payload : EmergencyCreate,
     db: Session = Depends(get_db)
 ) -> EmergencyRead:
     
