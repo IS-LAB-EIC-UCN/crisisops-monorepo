@@ -41,20 +41,6 @@ def get_recursos_disponibles(
     return service.listar_recursos_disponibles(tipo=tipo, capacidad_min=capacidad)
 
 
-# GET /resources/tipo
-@router.get(
-    "/tipo",
-    response_model=dict[str, list[ResourceDetailOut]],
-    status_code=status.HTTP_200_OK,
-    summary="Listar todos los recursos estructurados por tipo",
-)
-def get_recursos_por_tipo(
-    service: ServiceDEP,
-    tipo: str | None = Query(default=None, description="Filtrar un tipo específico")
-) -> dict:
-    return service.listar_recursos_por_tipo(tipo=tipo)
-
-
 # GET /resources/{id}
 @router.get(
     "/{id}",

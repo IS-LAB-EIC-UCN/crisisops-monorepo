@@ -22,27 +22,6 @@ class ResourcesService:
             tipo=tipo, capacidad_minima=capacidad_min
         )
 
-    def listar_recursos_por_tipo(
-        self,
-        tipo: str | None = None,
-    ) -> dict[str, list[dict[str, Any]]]:
-        recursos = self.repository.obtener_todos(tipo=tipo)
-        agrupados: dict[str, list[dict[str, Any]]] = {
-            "VEHICULO": [],
-            "IMPLEMENTO": [],
-        }
-        for recurso in recursos:
-            categoria = str(recurso.get("tipoRecurso", "OTRO")).upper()
-            if categoria not in agrupados:
-                agrupados[categoria] = []
-            agrupados[categoria].append(recurso)
-
-        if tipo:
-            clave = tipo.upper()
-            return {clave: agrupados.get(clave, [])}
-
-        return agrupados
-
     def obtener_recurso_por_id(self, id_recurso: int) -> dict[str, Any]:
         recurso = self.repository.obtener_por_id(id_recurso)
         if not recurso:
