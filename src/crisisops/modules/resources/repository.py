@@ -50,3 +50,14 @@ class ResourcesRepository:
 
     def obtener_por_id(self, id_recurso: int) -> Any | None:
         return self.db.get(Resource, id_recurso)
+
+    def guardar_implemento(self, recurso: Resource, implemento: implementos) -> Resource:
+        self.db.add(recurso)
+        self.db.flush()
+        implemento.id_recursos = recurso.id
+        self.db.add(implemento)
+        self.db.commit()
+        self.db.refresh(recurso)
+        self.db.refresh(implemento)
+
+        return recurso

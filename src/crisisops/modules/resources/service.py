@@ -1,8 +1,11 @@
+from datetime import date
 from typing import Any
 
 from fastapi import HTTPException, status
 
+from crisisops.modules.resources.models import Resource, implementos
 from crisisops.modules.resources.repository import ResourcesRepository
+from crisisops.modules.resources.schemas import ImplementoIn, ImplementoOut
 
 
 class ResourcesService:
@@ -48,3 +51,33 @@ class ResourcesService:
                 detail=f"Recurso con id {id_recurso} no encontrado.",
             )
         return recurso
+
+    def registrar_implemento(self, datos: ImplementoIn) -> ImplementoOut:
+        fecha_ingreso = date.today()
+        recurso = Resource(
+            name=datos.nombreRecurso,
+            fecha_ingreso=fecha_ingreso,
+            estado_recurso=datos.estadoRecurso.value,
+            peso=datos.peso,
+        )
+
+        implemento = implementos(
+            tipo_implemento=datos.tipoImplemento,
+            año=datos.anio or fecha_ingreso.year,
+            tipo_uso=datos.tipoUso,
+            estado_fisico=datos.estadoFisico,
+        )
+
+        self.repository.guardar_implemento(recurso, implemento)
+
+        return ImplementoOut(
+            idRecurso=recurso.id,
+            nombreRecurso=recurso.name,
+            fechaIngreso=recurso.fecha_ingreso,
+            estadoRecurso=recurso.estado_recurso,
+            peso=recurso.peso,
+            tipoImplemento=implemento.tipo_implemento,
+            anio=implemento.año,
+            tipoUso=implemento.tipo_uso,
+            estadoFisico=implemento.estado_fisico,
+        )

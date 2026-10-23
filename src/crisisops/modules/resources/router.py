@@ -1,11 +1,12 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from crisisops.core.database import get_db
+from crisisops.core.exceptions import DomainError
 from crisisops.modules.resources.repository import ResourcesRepository
-from crisisops.modules.resources.schemas import ResourceDetailOut
+from crisisops.modules.resources.schemas import ImplementoIn, ImplementoOut, ResourceDetailOut
 from crisisops.modules.resources.service import ResourcesService
 
 router = APIRouter(prefix="/resources", tags=["Grupo B - Recursos y equipamiento"])
@@ -67,3 +68,17 @@ def get_recurso_por_id(
     id: int
 ) -> dict:
     return service.obtener_recurso_por_id(id_recurso=id)
+
+# POST /resources
+@router.post(
+    "",
+    response_model=ImplementoOut,
+    status_code= status.HTTP_201_CREATED,
+    responses={400: {"description": "Estado inicial inválido"}},
+    summary="Registrar un nuevo recurso con su ficha",
+)
+def registrar_recurso(datos: ImplementoIn, service: ServiceDEP) -> ImplementoOut:
+    try:
+        return service.registrar_implemento(datos)
+    except DomainError as error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error)) from error

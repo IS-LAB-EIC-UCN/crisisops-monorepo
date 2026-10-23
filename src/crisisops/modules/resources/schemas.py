@@ -56,5 +56,15 @@ class VehiculoOut(ResourceBaseOut):
     largo: float
     altura: float
 
+class ImplementoIn(BaseModel):
+    nombreRecurso: str = Field(min_length=1, max_length=100)
+    estadoRecurso: ResourceStatus
+    peso: float = Field(gt=0)
+    tipoRecurso: Literal["IMPLEMENTO"]
+    tipoImplemento: str = Field(min_length=1, max_length=100)
+    tipoUso: str = Field(min_length=1, max_length=100)
+    estadoFisico: str = Field(min_length=1, max_length=100)
+    anio: int | None = Field(default=None, ge=1900)
+
 
 ResourceDetailOut = ImplementoOut | VehiculoOut | ResourceBaseOut
