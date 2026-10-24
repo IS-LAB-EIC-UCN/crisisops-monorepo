@@ -1,13 +1,15 @@
 #from crisisops.modules.emergencies.rules import find_field_issues
-from crisisops.modules.emergencies.enums import EmergencyStatus
+from crisisops.modules.emergencies.enums import EmergencyStatus, Role
 from typing import ParamSpec, TypeVar
 from functools import wraps
 from collections.abc import Callable
-from crisisops.modules.emergencies.enums import Role
 from crisisops.modules.emergencies.models import Emergency
-from crisisops.modules.emergencies.schemas import EmergencyCreate
-from crisisops.modules.emergencies.exceptions import EmergencyNotFound
+from crisisops.modules.emergencies.schemas import EmergencyCreate, ValidationDecision
+from crisisops.modules.emergencies.exceptions import EmergencyNotFound, InvalidStateTransition, ExceptionActionRequiresJustification, EmergencyValidationError
+from crisisops.modules.emergencies.validators import schemas_validate_emergency
 from crisisops.modules.emergencies.repository import EmergenciesRepository
+
+
 
 from sqlalchemy.orm import Session
 
@@ -46,6 +48,7 @@ def _transactional(func: Callable[P,R]) -> Callable[P,R]:
 
 VALIDATE_ROLES = (Role.OPERATOR)
 
+
 class EmergenciesService:
     """Casos de uso y reglas de negocio del módulo emergencies."""
 
@@ -80,4 +83,33 @@ class EmergenciesService:
 
         return emergency
 
-    
+    #función para detecta campos faltantes, incompletos o que no cumplen lo requisitos.
+    @_transactional
+    def check_emergency_completeness(self, emergency_id: int) -> dict:
+
+        emergency = self.get_or_raise(emergency_id)
+
+        if emergency is None:
+            raise EmergencyNotFound(
+                f"No existe la emergencia {emergency_id}"
+            )
+        try:
+            schemas_validate_emergency(emergency)
+
+        except EmergencyValidationError as e:
+
+            return{
+                "emergency_id": emergency_id,
+                "ready_for_validation": False,
+                "errors_fields": e.errors
+            }
+        
+        return{
+            "emergency_id": emergency_id,
+            "ready_for_validation": True,
+            "errors_fields": {}
+        }
+            
+
+        
+        
