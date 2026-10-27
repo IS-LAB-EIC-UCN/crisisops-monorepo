@@ -110,6 +110,23 @@ class EmergenciesService:
             "errors_fields": {}
         }
             
+    #función para validar un reporte (HU-01): pasa la emergencia de REPORTED a VALIDATED
+    @_transactional
+    def validate_emergency(self, emergency_id: int) -> Emergency:
 
+        emergency = self.get_or_raise(emergency_id)
+
+        #solo se puede validar un reporte que está recién reportado
+        if emergency.status != EmergencyStatus.REPORTED:
+            raise InvalidStateTransition(
+                f"Solo se puede validar una emergencia en estado REPORTED (estado actual: {emergency.status})"
+            )
+
+        #si faltan datos, lanza EmergencyValidationError y no se cambia nada
+        schemas_validate_emergency(emergency)
+
+        emergency.status = EmergencyStatus.VALIDATED
+
+        return emergency
         
         
