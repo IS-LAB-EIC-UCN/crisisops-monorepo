@@ -33,6 +33,26 @@ def check_emergency_completeness_validation(
 ) -> dict:
     return EmergenciesService(db).check_emergency_completeness(emergency_id)
 
+@router.post(
+    "/{emergency_id}/validate",
+    response_model = EmergencyRead,
+    status_code = status.HTTP_200_OK,
+    summary = "Validar o rechazar una emergencia",
+    description= ("approved=True valida el reporte (reported -> validated)"
+                  "approved=False lo rechaza (reported -> rejected) y exige un motivo  reason"
+                  "requiere un rol correcto para realizar operación"),
+)
+
+def validate_emergency(
+    emergency_id: int,
+    payload: ValidationDecision, #ValidationDecision contiene la decisión si se aprueba o rechaza la validación y el motivo.
+    actor_role: Role, 
+    db: Session = Depends(get_db), #Llamamos a la función db en database.py, depends toma lo que se le pase y lo inyecta como parámetro
+    #Acá puede ir otro parámetro como User que use depends y se le pasa una función que verifique si el
+    #usuario actual pertenece a los roles en _OPERATOR_UP
+) -> EmergencyRead: #Esto indica que se devuelve una  clase EmergencyRead en schemas.py que hereda de BaseModel de pydantic
+    emergency = EmergenciesService(db).validate_emergency(emergency_id, payload, actor_role) 
+    return EmergencyRead.model_validate(emergency) #se valida
 
 @router.post(
     "",

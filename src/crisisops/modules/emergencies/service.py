@@ -110,23 +110,34 @@ class EmergenciesService:
             "errors_fields": {}
         }
             
-    #función para validar un reporte (HU-01): pasa la emergencia de REPORTED a VALIDATED
+
+    #función para validar una emergencia
     @_transactional
-    def validate_emergency(self, emergency_id: int) -> Emergency:
+    def validate_emergency(self, emergency_id: int, decision: ValidationDecision, actor_role: Role) -> Emergency:
 
-        emergency = self.get_or_raise(emergency_id)
+        emergency = self.get_or_raise(emergency_id) #obtenemos la emergencia que deseamos validar por medio de su ID
 
-        #solo se puede validar un reporte que está recién reportado
-        if emergency.status != EmergencyStatus.REPORTED:
-            raise InvalidStateTransition(
-                f"Solo se puede validar una emergencia en estado REPORTED (estado actual: {emergency.status})"
+        schemas_validate_emergency(emergency) #Esta función se encarga de validar que la emergencia tenga los campos requeridos para su validación, en el caso que no lo tenga devuelve un diccionario con los campos requeridos o faltantes
+
+        target = EmergencyStatus.VALIDATED if decision.approved else EmergencyStatus.REJECTED #Almacena el status VALIDATED en el caso que la decision sea True, en caso contario REJECTED.
+
+
+        if not decision.approved and not decision.reason: #si la decision es REJECTED, se debe adjuntar un razón en caso contrario se produce un error
+            raise ExceptionActionRequiresJustification(
+                "Rechazar una reporte requiere indicar el motivo (reason)."
             )
 
-        #si faltan datos, lanza EmergencyValidationError y no se cambia nada
-        schemas_validate_emergency(emergency)
+        if emergency.status != EmergencyStatus.REPORTED: #El status para la validación debe ser REPORTED, no puede ser por ejemplo: CANCELLED
+            
+            raise InvalidStateTransition(
 
-        emergency.status = EmergencyStatus.VALIDATED
+                f"No es posible validar la emergencia {emergency_id}: estado actual es"
+                f"{emergency.status.value}, se esperaba REPORTED"
+            )
 
+        emergency.status = target #se asigna a la emergencia su nuevo status
+        
         return emergency
+    
         
         
