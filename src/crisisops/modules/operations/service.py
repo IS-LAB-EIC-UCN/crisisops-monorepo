@@ -7,7 +7,7 @@ from crisisops.modules.operations.schemas import OperationCreate
 
 
 class EmergencyNotFound(DomainError):
-    status_code = 422
+    status_code = 404
 
 
 class EmergencyNotActive(DomainError):
