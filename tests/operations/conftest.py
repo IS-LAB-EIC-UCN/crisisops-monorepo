@@ -18,6 +18,9 @@ from crisisops.modules.operations.models import (
     MissionResourceRequirement,
     Operation,
 )
+from crisisops.modules.operations.repository import OperationsRepository
+from crisisops.modules.operations.router import get_operations_service
+from crisisops.modules.operations.service import OperationsService
 
 # Solo se crean las tablas de este módulo; las de otros grupos no se tocan.
 OPERATIONS_TABLES = [
@@ -87,6 +90,19 @@ def get_emergency_status(
 ) -> Callable[[int], str | None]:
     """Función lista para pasar a OperationsService(get_emergency_status)."""
     return emergency_service.get_status
+
+
+@pytest.fixture()
+def api_client(
+    client: TestClient,
+    db_session: Session,
+    get_emergency_status: Callable[[int], str | None],
+) -> TestClient:
+    """Cliente HTTP cuyo service consulta al Grupo A simulado en vez del real."""
+    app.dependency_overrides[get_operations_service] = lambda: OperationsService(
+        get_emergency_status, OperationsRepository(db_session)
+    )
+    return client
 
 
 @pytest.fixture()

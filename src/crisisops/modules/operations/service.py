@@ -7,18 +7,26 @@ from crisisops.modules.operations.schemas import OperationCreate
 
 
 class EmergencyNotFound(DomainError):
-    status_code = 404
+    """La emergencia indicada no existe en Grupo A."""
+
+    status_code = 422
 
 
 class EmergencyNotActive(DomainError):
+    """La emergencia existe, pero su estado no permite crear operaciones."""
+
     status_code = 409
 
 
 class EmergencyUnavailable(DomainError):
+    """No se pudo consultar a Grupo A (caído o aún no integrado)."""
+
     status_code = 503
 
 
 class OperationNotFound(DomainError):
+    """No existe una operación con el id consultado."""
+
     status_code = 404
 
 

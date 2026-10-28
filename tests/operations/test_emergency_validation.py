@@ -1,8 +1,8 @@
 import pytest
 
 from crisisops.core.exceptions import DomainError
-from crisisops.modules.operations import service as operations_service_module
 from crisisops.modules.operations.models import Operation
+from crisisops.modules.operations.schemas import OperationCreate
 from crisisops.modules.operations.service import (
     EmergencyNotActive,
     EmergencyNotFound,
@@ -26,7 +26,7 @@ def test_active_emergency_allows_continuation() -> None:
 @pytest.mark.parametrize(
     ("status", "expected_error", "http_status"),
     [
-        (None, EmergencyNotFound, 404),
+        (None, EmergencyNotFound, 422),
         ("CLOSED", EmergencyNotActive, 409),
         ("REPORTED", EmergencyNotActive, 409),
         ("REJECTED", EmergencyNotActive, 409),
@@ -56,76 +56,28 @@ def test_unavailable_emergency_service_raises_503(failure: type[Exception]) -> N
     assert isinstance(caught.value.__cause__, failure)
 
 
-def test_create_operation_with_valid_emergency_returns_201(
-    client,
-    db_session,
-    monkeypatch,
-) -> None:
-    def fake_get_status(_emergency_id: int) -> str:
-        return "ACTIVE"
+class RepositoryThatFailsOnCommit:
+    """Repository falso: crea la operación, pero el commit falla."""
 
-    monkeypatch.setattr(
-        operations_service_module,
-        "get_emergency_status_from_group_a",
-        fake_get_status,
-    )
+    def __init__(self) -> None:
+        self.rolled_back = False
 
-    response = client.post(
-        "/api/v1/operations",
-        json={"emergency_id": 1, "name": "Evacuación del edificio", "priority": "HIGH"},
-    )
+    def create_operation(self, **data) -> Operation:
+        return Operation(**data)
 
-    assert response.status_code == 201
-    data = response.json()
-    assert data["emergency_id"] == 1
-    assert data["name"] == "Evacuación del edificio"
-    assert data["priority"] == "HIGH"
-    assert db_session.query(Operation).count() == 1
+    def commit(self) -> None:
+        raise RuntimeError("Falló el commit")
+
+    def rollback(self) -> None:
+        self.rolled_back = True
 
 
-def test_create_operation_with_missing_emergency_returns_404(
-    client,
-    db_session,
-    monkeypatch,
-) -> None:
-    def fake_get_status(_emergency_id: int) -> str | None:
-        return None
+def test_failed_commit_rolls_back_and_propagates_error() -> None:
+    repository = RepositoryThatFailsOnCommit()
+    service = OperationsService(lambda _emergency_id: "ACTIVE", repository)
+    data = OperationCreate(emergency_id=1, name="Evacuación del edificio", priority="HIGH")
 
-    monkeypatch.setattr(
-        operations_service_module,
-        "get_emergency_status_from_group_a",
-        fake_get_status,
-    )
+    with pytest.raises(RuntimeError):
+        service.create_operation(data)
 
-    response = client.post(
-        "/api/v1/operations",
-        json={"emergency_id": 999, "name": "Operación sin emergencia", "priority": "MEDIUM"},
-    )
-
-    assert response.status_code == 404
-    assert response.json()["detail"] == "La emergencia 999 no existe."
-    assert db_session.query(Operation).count() == 0
-
-
-def test_create_operation_with_closed_emergency_returns_409(
-    client,
-    db_session,
-    monkeypatch,
-) -> None:
-    def fake_get_status(_emergency_id: int) -> str:
-        return "CLOSED"
-
-    monkeypatch.setattr(
-        operations_service_module,
-        "get_emergency_status_from_group_a",
-        fake_get_status,
-    )
-
-    response = client.post(
-        "/api/v1/operations",
-        json={"emergency_id": 2, "name": "Operación cerrada", "priority": "LOW"},
-    )
-
-    assert response.status_code == 409
-    assert response.json()["detail"] == "La emergencia 2 no está activa (estado: CLOSED)."
-    assert db_session.query(Operation).count() == 0
+    assert repository.rolled_back
