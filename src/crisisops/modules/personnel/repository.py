@@ -1,6 +1,6 @@
 from sqlalchemy import select
  
-from crisisops.modules.personnel.models import PersonnelAssignment
+from crisisops.modules.personnel.models import AssignmentStatus, PersonnelAssignment
  
  
 class PersonnelRepository:
@@ -15,7 +15,9 @@ class PersonnelRepository:
         """Asignaciones activas del brigadista que se solapan con [start_time, end_time)."""
         stmt = select(PersonnelAssignment).where(
             PersonnelAssignment.responder_id == responder_id,
-            PersonnelAssignment.status != "RELEASED",
+            PersonnelAssignment.status.not_in(
+                [AssignmentStatus.COMPLETED, AssignmentStatus.CANCELLED]
+            ),
         )
         return [
             a
@@ -29,4 +31,3 @@ class PersonnelRepository:
         self.db.commit()
         self.db.refresh(assignment)
         return assignment
- 
