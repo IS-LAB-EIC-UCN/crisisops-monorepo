@@ -9,6 +9,7 @@ URL = "/api/v1/emergencies"
 
 VALID_REPORT = {
     "type": "FIRE",
+    "date_time": "2026-10-20T10:00:00Z",
     "reported_by": "operator1",
     "title": "Incendio_prueba",
     "description": "Estamos realizando un reporte d prueba para testing",
@@ -50,7 +51,7 @@ def test_valid_report_is_persisted_with_all_fields(client, db_session):
 
 def test_minimal_report_is_persisted_with_empty_optional_fields(client, db_session):
    
-    payload = {"type": "FLOOD", "reported_by":"operator1"}
+    payload = {"type": "FLOOD", "date_time": "2026-10-20T10:00:00Z", "reported_by":"operator1"}
 
     emergency_id = client.post(URL, json=payload).json()["id"]
 
@@ -73,7 +74,14 @@ def test_each_report_creates_its_own_row(client, db_session):
     assert _count_rows(db_session) == 2
 
 def test_rejected_report_is_not_persisted(client, db_session):
-    response = client.post(URL, json={"type": "TORNADO", "reported_by":"operator1"})
+    
+    payload = {
+        "type": "TORNADO",
+        "date_time": "2026-10-20T10:00:00Z",
+        "reported_by": "operator1",
+    }
+    
+    response = client.post(URL, json=payload)
 
     assert response.status_code == 422
     assert _count_rows(db_session) == 0

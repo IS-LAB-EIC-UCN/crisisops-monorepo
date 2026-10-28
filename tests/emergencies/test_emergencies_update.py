@@ -15,11 +15,12 @@ from crisisops.modules.emergencies.service import EmergenciesService
 URL = "/api/v1/emergencies"
 
 VALID_REPORT = {
-"type": "FIRE",
-"reported_by": "operator1",
-"title": "Incendio de prueba",
-"description": "Reporte inicial de una emergencia de prueba.",
-"location_description": "Zona A, La Serena",
+    "type": "FIRE",
+    "date_time": "2026-10-20T10:00:00Z",
+    "reported_by": "operator1",
+    "title": "Incendio de prueba",
+    "description": "Reporte inicial de una emergencia de prueba.",
+    "location_description": "Zona A, La Serena",
 }
 
 def create_emergency(client) -> int:

@@ -74,6 +74,11 @@ class Emergency(Base):
     severity : Mapped[Severity | None] = mapped_column(
         _enum_column(Severity,30), 
         nullable = True)
+
+    #Fecha y hora en que ocurrió la emergencia, informada por quien la reporta.
+    date_time: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable = False)
     
     #Quien es el que reporta. Sirve para la trazabilidad. como la creación de 
     #una tabla Usuarios requiere la coordinación de los demas modulos, por ahora 

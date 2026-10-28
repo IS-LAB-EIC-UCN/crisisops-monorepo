@@ -94,6 +94,7 @@ class EmergenciesService:
             severity = payload.severity,
             location_description = payload.location_description,
             status = EmergencyStatus.REPORTED,
+            date_time = payload.date_time,
             reported_by = payload.reported_by
 
         )

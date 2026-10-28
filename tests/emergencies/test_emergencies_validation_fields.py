@@ -10,6 +10,7 @@ URL_VALIDATIONS_FIELDS = "/api/v1/emergencies/{emergency_id}/fields"
 
 VALID_REPORT = {
     "type":"FIRE",
+    "date_time": "2026-10-20T10:00:00Z",
     "reported_by": "operator1",
     "title": "Incendio de prueba",
     "description":("Estamos realizando un reporte de prueba para testing"

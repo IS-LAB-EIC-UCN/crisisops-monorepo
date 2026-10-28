@@ -19,6 +19,7 @@ URL_CREATION = "/api/v1/emergencies"
 
 COMPLETE_REPORT = {
     "type": "FIRE",
+    "date_time": "2026-10-20T10:00:00Z",
     "reported_by": "operator1",
     "title": "Incendio forestal en cerro",
     "description": "Incendio forestal cercano a viviendas, con avance rapido por el viento. " * 3,
@@ -26,7 +27,11 @@ COMPLETE_REPORT = {
     "severity": "HIGH",
 }
 
-INCOMPLETE_REPORT = {"type": "FIRE", "reported_by": "operator1"}
+INCOMPLETE_REPORT = {
+    "type": "FIRE",
+    "date_time": "2026-10-20T10:00:00Z",
+    "reported_by": "operator1",
+}
 
 
 def _register(client, payload) -> int:

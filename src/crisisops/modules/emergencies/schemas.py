@@ -38,6 +38,8 @@ class EmergencyCreate(BaseModel):
         description="Ubicacion"
     )
 
+    date_time: datetime
+
     reported_by : str
 
 
@@ -70,6 +72,8 @@ class EmergencyUpdate(BaseModel):
         max_length=250
     )
 
+    date_time: datetime | None = None
+
 class EmergencyRead(BaseModel):
 
     model_config = ConfigDict(from_attributes=True) #Pydantic solo sabe estrcuturar datos cuando se
@@ -82,6 +86,7 @@ class EmergencyRead(BaseModel):
     description: str | None
     severity: Severity | None
     location_description: str | None
+    date_time: datetime
     status: EmergencyStatus
     reported_by: str
     created_at: datetime
@@ -103,6 +108,7 @@ class EmergencyValidate(BaseModel):
     description: str = Field(min_length=100)
     severity: Severity
     location_description: str=Field(min_length=5)
+    date_time: datetime
     status: EmergencyStatus
     reported_by: str
     created_at: datetime
