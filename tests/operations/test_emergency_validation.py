@@ -16,7 +16,7 @@ def test_active_emergency_allows_continuation() -> None:
         consulted_ids.append(emergency_id)
         return "ACTIVE"
 
-    OperationsService(get_status).validate_emergency(42)
+    OperationsService(get_status, repository=None).validate_emergency(42)
 
     assert consulted_ids == [42]
 
@@ -37,7 +37,7 @@ def test_invalid_emergency_raises_domain_error(
         return status
 
     with pytest.raises(expected_error) as caught:
-        OperationsService(get_status).validate_emergency(42)
+        OperationsService(get_status, repository=None).validate_emergency(42)
 
     assert caught.value.status_code == http_status
 
@@ -48,7 +48,7 @@ def test_unavailable_emergency_service_raises_503(failure: type[Exception]) -> N
         raise failure("Grupo A no disponible")
 
     with pytest.raises(EmergencyUnavailable) as caught:
-        OperationsService(get_status).validate_emergency(42)
+        OperationsService(get_status, repository=None).validate_emergency(42)
 
     assert caught.value.status_code == 503
     assert isinstance(caught.value.__cause__, failure)
