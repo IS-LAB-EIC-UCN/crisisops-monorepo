@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from crisisops.core.database import get_db
 from crisisops.modules.emergencies.enums import Role
-from crisisops.modules.emergencies.exceptions import DomainError
+from crisisops.modules.emergencies.exceptions import DomainError, EmergencyValidationError
 from crisisops.modules.emergencies.schemas import (
     EmergencyCreate,
     EmergencyRead,
@@ -28,10 +28,10 @@ class DomainErrorRoute(APIRoute):
             try:
                 return await original_handler(request)
             except DomainError as error:
-                return JSONResponse(
-                    status_code=error.http_status,
-                    content={"error": error.code, "message": error.message},
-                )
+                content: dict[str, Any] = {"error": error.code, "message": error.message}
+                if isinstance(error, EmergencyValidationError):
+                    content["errors"] = error.errors
+                return JSONResponse(status_code=error.http_status, content=content)
 
         return handler
 
