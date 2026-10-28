@@ -15,7 +15,9 @@ class MockPersonnelService:
         
         # Simulamos que el ID 2 ya tiene un turno que se solapa
         if responder_id == 2:
-            raise DomainError(f"El personal con ID {responder_id} ya posee una asignación activa que se solapa.")
+            raise DomainError(
+                f"El personal con ID {responder_id} ya posee una asignación activa que se solapa."
+            )
         
         # Simulamos una creación exitosa para cualquier otro ID usando __init__
         class MockAssignment:
