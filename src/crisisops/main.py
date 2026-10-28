@@ -1,5 +1,7 @@
-from fastapi import FastAPI
 
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+from crisisops.modules.emergencies.exceptions import DomainError
 from crisisops.core.config import get_settings
 from crisisops.modules.emergencies.router import router as emergencies_router
 from crisisops.modules.evacuation.router import router as evacuation_router
@@ -15,6 +17,15 @@ app = FastAPI(
     description="API común del proyecto académico CrisisOps.",
 )
 
+@app.exception_handler(DomainError)
+async def domain_error_handler(request: Request, exc: DomainError):
+    return JSONResponse(
+        status_code=exc.http_status,
+        content={
+            "error": exc.code,
+            "message": exc.message,
+        },
+    )
 
 @app.get("/health", tags=["Sistema"])
 def health() -> dict[str, str]:

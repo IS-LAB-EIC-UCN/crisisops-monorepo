@@ -2,7 +2,12 @@ from fastapi import APIRouter, Depends, status
 from crisisops.core.database import get_db
 from crisisops.modules.emergencies.service import EmergenciesService
 from crisisops.modules.emergencies.enums import Role
-from crisisops.modules.emergencies.schemas import EmergencyRead, EmergencyCreate, ValidationDecision
+from crisisops.modules.emergencies.schemas import EmergencyRead
+from crisisops.modules.emergencies.schemas import (
+    EmergencyCreate,
+    EmergencyUpdate,
+    ValidationDecision,
+)
 from sqlalchemy.orm import Session
 
 
@@ -54,12 +59,38 @@ def validate_emergency(
     emergency = EmergenciesService(db).validate_emergency(emergency_id, payload, actor_role) 
     return EmergencyRead.model_validate(emergency) #se valida
 
+
+@router.patch(
+    "/{emergency_id}",
+    response_model=EmergencyRead,
+    status_code=status.HTTP_200_OK,
+    summary="Actualizar un reporte de emergencia",
+    description=(
+        "Permite modificar los campos de una emergencia "
+        "que se encuentre en estado REPORTED."
+    ),
+)
+def update_emergency(
+    emergency_id: int,
+    payload: EmergencyUpdate,
+    db: Session = Depends(get_db),
+) -> EmergencyRead:
+    service = EmergenciesService(db)
+
+    emergency = service.update_emergency(
+        emergency_id,
+        payload,
+    )
+
+    return EmergencyRead.model_validate(emergency)
+
 @router.post(
     "",
     response_model = EmergencyRead,
     status_code = status.HTTP_201_CREATED,
     summary="Crear una emegencia",
-    description="Se crea una emergencia, se envía la información y se valida a travez de EmergencyCreate con pydance"
+    description="Se crea una emergencia, se envía la información y "
+                "se valida a travez de EmergencyCreate con pydance"
 )
 
 def create_emegency(

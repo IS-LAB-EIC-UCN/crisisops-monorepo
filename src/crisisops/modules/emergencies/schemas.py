@@ -37,9 +37,40 @@ class EmergencyCreate(BaseModel):
 
     reported_by : str
 
+
+
+
+class EmergencyUpdate(BaseModel):
+    type: EmergencyType | None = None
+
+    type_detail: str | None = Field(
+        default=None,
+        max_length=150
+    )
+
+    title: str | None = Field(
+        default=None,
+        min_length=5,
+        max_length=150
+    )
+
+    description: str | None = Field(
+        default=None,
+        min_length=10
+    )
+
+    severity: Severity | None = None
+
+    location_description: str | None = Field(
+        default=None,
+        min_length=3,
+        max_length=250
+    )
+
 class EmergencyRead(BaseModel):
 
-    model_config = ConfigDict(from_attributes=True) #Pydantic solo sabe estrcuturar datos cuando se les pasa un diccionario, los ORM guardan datos como atributos
+    model_config = ConfigDict(from_attributes=True) #Pydantic solo sabe estrcuturar datos cuando se
+    # les pasa un diccionario, los ORM guardan datos como atributos
 
     id: int
     type: EmergencyType
@@ -53,8 +84,10 @@ class EmergencyRead(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-'''La clase EmergencyValidate la utilizamos para validar que la Emergencia consultada tenga los datos necesarios para pasar a su validación. 
-   La función que obtiene los errores en el caso que la emergencia requiera datos es schemas_validate_emergency(emergency: Emergency) -> None:
+'''La clase EmergencyValidate la utilizamos para validar que la Emergencia consultada 
+   tenga los datos necesarios para pasar a su validación. 
+   La función que obtiene los errores en el caso que 
+   la emergencia requiera datos es schemas_validate_emergency(emergency: Emergency) -> None:
    presente en el archivo validators.py
 '''
 class EmergencyValidate(BaseModel):

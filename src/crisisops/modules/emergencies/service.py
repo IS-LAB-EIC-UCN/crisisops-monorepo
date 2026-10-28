@@ -4,8 +4,15 @@ from typing import ParamSpec, TypeVar
 from functools import wraps
 from collections.abc import Callable
 from crisisops.modules.emergencies.models import Emergency
-from crisisops.modules.emergencies.schemas import EmergencyCreate, ValidationDecision
-from crisisops.modules.emergencies.exceptions import EmergencyNotFound, InvalidStateTransition, ExceptionActionRequiresJustification, EmergencyValidationError
+from crisisops.modules.emergencies.schemas import EmergencyCreate
+from crisisops.modules.emergencies.schemas import EmergencyUpdate, ValidationDecision
+from crisisops.modules.emergencies.exceptions import (
+    EmergencyNotFound,
+    InvalidStateTransition,
+    ExceptionActionRequiresJustification,
+    EmergencyValidationError,
+    InvalidEmergencyUpdate,
+)
 from crisisops.modules.emergencies.validators import schemas_validate_emergency
 from crisisops.modules.emergencies.repository import EmergenciesRepository
 
@@ -14,20 +21,30 @@ from crisisops.modules.emergencies.repository import EmergenciesRepository
 from sqlalchemy.orm import Session
 
 '''
-Esto es un decorador, envuelve un metodo para que haga commit() si todo sale bien
-y rollback() si algo falla. Los parámetros P (nombre que representa los parámetros de una función cualquiera) 
+Esto es un decorador, envuelve un metodo 
+para que haga commit() si todo sale bien
+y rollback() si algo falla. 
+Los parámetros P (nombre que representa 
+los parámetros de una función cualquiera) 
 y R (representa el tipo de devuelve la función).
 
-func que aparece en wraps(func) primeramente, es la función original que vamos a envolver, en este primer caso validate_emergency.
-Callable(P,R), es algo que se puede llamar que tiene parámetos de entrada y que devuelve R
--> Callable(P,R), Devuelve otra función con los mismo parámetros y el mismo retornno
+func que aparece en wraps(func) primeramente, es la función original 
+que vamos a envolver, en este primer caso validate_emergency.
+Callable(P,R), 
+es algo que se puede llamar que tiene parámetos de entrada y que devuelve R
+-> Callable(P,R), Devuelve otra función 
+con los mismo parámetros y el mismo retornno
 
-def wrapper(...) es la función que realmente se ejecutará cada vez que se llame al metodo decorado.
+def wrapper(...) es la función que realmente se 
+ejecutará cada vez que se llame al metodo decorado.
 
-EJEMPLO: AL LLAMAR EMERGENCIESSERVICE.validate_emergency en realidad corre wrapper(self, parametros que le pasamos a la funcion
-validation_emergency) ejecuta el método y, según el resultado, hace el commit o rollback.
+EJEMPLO: AL LLAMAR EMERGENCIESSERVICE.validate_emergency en realidad corre 
+wrapper(self, parametros que le pasamos a la funcion
+validation_emergency) ejecuta el método y, 
+según el resultado, hace el commit o rollback.
 
-LO DEJO TODO COMENTADO  PARA ANALIZARLO Y DECIDIR SI SE OCUPA O SE BUSCA OTRA FORMA PARA REALIZAR TODA LA OPERACIÓN
+LO DEJO TODO COMENTADO  PARA ANALIZARLO Y DECIDIR SI SE OCUPA O 
+SE BUSCA OTRA FORMA PARA REALIZAR TODA LA OPERACIÓN
 QUE REQUIERE INTERACTUAR CON LA BASE DE DATOS Y POSIBLE ERRORES.
 '''
 P = ParamSpec("P")
@@ -113,21 +130,34 @@ class EmergenciesService:
 
     #función para validar una emergencia
     @_transactional
-    def validate_emergency(self, emergency_id: int, decision: ValidationDecision, actor_role: Role) -> Emergency:
+    def validate_emergency(self,
+                           emergency_id: int,
+                           decision: ValidationDecision,
+                           actor_role: Role
+                           ) -> Emergency:
+        # obtenemos la emergencia que deseamos validar por medio de su ID
+        emergency = self.get_or_raise(emergency_id)
 
-        emergency = self.get_or_raise(emergency_id) #obtenemos la emergencia que deseamos validar por medio de su ID
+        # Esta función se encarga de validar que la emergencia
+        # tenga los campos requeridos para su validación,
+        # en el caso que no lo tenga devuelve
+        # un diccionario con los campos requeridos o faltantes
+        schemas_validate_emergency(emergency)
 
-        schemas_validate_emergency(emergency) #Esta función se encarga de validar que la emergencia tenga los campos requeridos para su validación, en el caso que no lo tenga devuelve un diccionario con los campos requeridos o faltantes
+        # Almacena el status VALIDATED en el caso que la decision sea True,
+        # en caso contario REJECTED.
+        target = EmergencyStatus.VALIDATED if decision.approved else EmergencyStatus.REJECTED
 
-        target = EmergencyStatus.VALIDATED if decision.approved else EmergencyStatus.REJECTED #Almacena el status VALIDATED en el caso que la decision sea True, en caso contario REJECTED.
 
-
-        if not decision.approved and not decision.reason: #si la decision es REJECTED, se debe adjuntar un razón en caso contrario se produce un error
+        if not decision.approved and not decision.reason: #si la decision es REJECTED,
+            # se debe adjuntar un razón en caso contrario se produce un error
             raise ExceptionActionRequiresJustification(
                 "Rechazar una reporte requiere indicar el motivo (reason)."
             )
 
-        if emergency.status != EmergencyStatus.REPORTED: #El status para la validación debe ser REPORTED, no puede ser por ejemplo: CANCELLED
+        if emergency.status != EmergencyStatus.REPORTED: #El status para la validación
+            # debe ser REPORTED,
+            # no puede ser por ejemplo: CANCELLED
             
             raise InvalidStateTransition(
 
@@ -137,6 +167,42 @@ class EmergenciesService:
 
         emergency.status = target #se asigna a la emergencia su nuevo status
         
+        return emergency
+
+
+
+    @_transactional
+    def update_emergency(
+        self,
+        emergency_id: int,
+        payload: EmergencyUpdate,
+    ) -> Emergency:
+        emergency = self.get_or_raise(emergency_id)
+
+        if emergency.status != EmergencyStatus.REPORTED:
+            raise InvalidStateTransition(
+                f"No se puede editar la emergencia {emergency_id}: "
+                f"su estado es {emergency.status.value}; "
+                "se esperaba REPORTED."
+            )
+
+        changes = payload.model_dump(exclude_unset=True)
+
+        if not changes:
+            raise InvalidEmergencyUpdate(
+                "Debes enviar al menos un campo para actualizar."
+            )
+
+        for field, value in changes.items():
+            if value is None:
+                raise InvalidEmergencyUpdate(
+                    f"El campo {field} no puede ser null."
+                )
+
+            setattr(emergency, field, value)
+
+        self.repo.update(emergency)
+
         return emergency
     
         
