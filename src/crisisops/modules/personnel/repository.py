@@ -22,4 +22,11 @@ class PersonnelRepository:
             for a in self.db.scalars(stmt)
             if a.overlaps(start_time, end_time) and a.id != exclude_assignment_id
         ]
+    
+    def create_assignment(self, assignment: PersonnelAssignment) -> PersonnelAssignment:
+        """Guarda una nueva asignación en la base de datos."""
+        self.db.add(assignment)
+        self.db.commit()
+        self.db.refresh(assignment)
+        return assignment
  
