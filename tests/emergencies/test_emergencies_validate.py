@@ -2,7 +2,7 @@
 
 import pytest
 
-from crisisops.modules.emergencies.enums import(
+from crisisops.modules.emergencies.enums import (
     EmergencyStatus,
     Role,
 )
@@ -12,8 +12,8 @@ from crisisops.modules.emergencies.exceptions import (
     InvalidStateTransition,
 )
 from crisisops.modules.emergencies.models import Emergency
-from crisisops.modules.emergencies.service import EmergenciesService
 from crisisops.modules.emergencies.schemas import ValidationDecision
+from crisisops.modules.emergencies.service import EmergenciesService
 
 URL_CREATION = "/api/v1/emergencies"
 

@@ -1,15 +1,17 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, status
+from sqlalchemy.orm import Session
+
 from crisisops.core.database import get_db
-from crisisops.modules.emergencies.service import EmergenciesService
 from crisisops.modules.emergencies.enums import Role
-from crisisops.modules.emergencies.schemas import EmergencyRead
 from crisisops.modules.emergencies.schemas import (
     EmergencyCreate,
+    EmergencyRead,
     EmergencyUpdate,
     ValidationDecision,
 )
-from sqlalchemy.orm import Session
-
+from crisisops.modules.emergencies.service import EmergenciesService
 
 router = APIRouter(prefix="/emergencies", tags=["Grupo A - Emergencias y evaluación"])
 
@@ -34,7 +36,7 @@ def module_health() -> dict[str, str]:
 
 def check_emergency_completeness_validation(
     emergency_id: int,
-    db: Session = Depends(get_db)
+    db: Annotated[Session, Depends(get_db)]
 ) -> dict:
     return EmergenciesService(db).check_emergency_completeness(emergency_id)
 
@@ -50,12 +52,16 @@ def check_emergency_completeness_validation(
 
 def validate_emergency(
     emergency_id: int,
-    payload: ValidationDecision, #ValidationDecision contiene la decisión si se aprueba o rechaza la validación y el motivo.
+    payload: ValidationDecision, 
+    #ValidationDecision contiene la decisión si se aprueba o rechaza la validación y el motivo.
     actor_role: Role, 
-    db: Session = Depends(get_db), #Llamamos a la función db en database.py, depends toma lo que se le pase y lo inyecta como parámetro
-    #Acá puede ir otro parámetro como User que use depends y se le pasa una función que verifique si el
-    #usuario actual pertenece a los roles en _OPERATOR_UP
-) -> EmergencyRead: #Esto indica que se devuelve una  clase EmergencyRead en schemas.py que hereda de BaseModel de pydantic
+    db: Annotated[Session, Depends(get_db)], #Llamamos a la función db en database.py, 
+    #depends toma lo que se le pase y lo inyecta como parámetro
+    #Acá puede ir otro parámetro como User que use depends y se le pasa una función que verifique 
+    #si el usuario actual pertenece a los roles en _OPERATOR_UP
+) -> EmergencyRead: 
+    #Esto indica que se devuelve una  clase EmergencyRead en schemas.py 
+    #que hereda de BaseModel de pydantic
     emergency = EmergenciesService(db).validate_emergency(emergency_id, payload, actor_role) 
     return EmergencyRead.model_validate(emergency) #se valida
 
@@ -73,7 +79,7 @@ def validate_emergency(
 def update_emergency(
     emergency_id: int,
     payload: EmergencyUpdate,
-    db: Session = Depends(get_db),
+    db: Annotated[Session, Depends(get_db)],
 ) -> EmergencyRead:
     service = EmergenciesService(db)
 
@@ -95,7 +101,7 @@ def update_emergency(
 
 def create_emegency(
     payload : EmergencyCreate,
-    db: Session = Depends(get_db)
+    db: Annotated[Session, Depends(get_db)]
 ) -> EmergencyRead:
     
     emergency = EmergenciesService(db).create_emergency(payload)

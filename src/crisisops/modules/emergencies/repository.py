@@ -1,7 +1,7 @@
-from crisisops.modules.emergencies.models import Emergency
 from sqlalchemy.orm import Session
-from crisisops.modules.emergencies.schemas import EmergencyCreate
 
+from crisisops.modules.emergencies.models import Emergency
+from crisisops.modules.emergencies.schemas import EmergencyCreate
 
 
 class EmergenciesRepository:

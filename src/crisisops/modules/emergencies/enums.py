@@ -1,5 +1,6 @@
 from enum import StrEnum
 
+
 #SE PUEDEN AGREGAR, OTHER ES CUANDO EL TIPO DE EMERGENCIA NO SE ENCUENTRA EN LAS OPCIONES
 class EmergencyType(StrEnum):
     FIRE = "FIRE"

@@ -1,6 +1,7 @@
 '''T-4.5: El registro inicial de una emergencia se envía y persiste correctamente'''
 
 from sqlalchemy import func, select
+
 from crisisops.modules.emergencies.enums import EmergencyStatus, EmergencyType
 from crisisops.modules.emergencies.models import Emergency
 

@@ -3,16 +3,19 @@
 Los contratos consumidos por otros módulos deben mantenerse pequeños,
 explícitos y versionables.
 """
+from datetime import datetime
+
 from pydantic import BaseModel, ConfigDict, Field
-from crisisops.modules.emergencies.enums import EmergencyType, EmergencyStatus
+
+from crisisops.modules.emergencies.enums import EmergencyStatus, EmergencyType
 from crisisops.shared.enums import Severity
-from datetime import UTC,datetime
 
 
 class ValidationDecision(BaseModel):
 
     approved: bool
-    reason: str|None = Field(default=None, description="Obligatorio cuando approved=False porque indica el motivo del rechazo")
+    reason: str|None = Field(default=None, description=
+    "Obligatorio cuando approved=False porque indica el motivo del rechazo")
 
 
 class EmergencyCreate(BaseModel):

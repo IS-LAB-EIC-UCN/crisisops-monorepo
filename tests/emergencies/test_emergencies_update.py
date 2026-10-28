@@ -1,11 +1,9 @@
 import pytest
-from sqlalchemy import select
 
 from crisisops.modules.emergencies.enums import EmergencyStatus
 from crisisops.modules.emergencies.exceptions import (
-EmergencyNotFound,
-InvalidStateTransition,
-InvalidEmergencyUpdate,
+    EmergencyNotFound,
+    InvalidEmergencyUpdate,
 )
 from crisisops.modules.emergencies.models import Emergency
 from crisisops.modules.emergencies.schemas import (

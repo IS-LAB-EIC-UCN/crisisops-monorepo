@@ -7,6 +7,7 @@ from sqlalchemy.pool import StaticPool
 from crisisops.core.database import Base, get_db
 from crisisops.main import app
 
+
 @pytest.fixture() #Esto le indica a pytest, esta función no es un test. 
 #Es una función que prepara recursos  que otros Test pueden necesitar
 #luego pytest reconoce que existe un fixture con ese nombre db_session() 

@@ -1,8 +1,9 @@
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
-from crisisops.modules.emergencies.exceptions import DomainError
+
 from crisisops.core.config import get_settings
+from crisisops.modules.emergencies.exceptions import DomainError
 from crisisops.modules.emergencies.router import router as emergencies_router
 from crisisops.modules.evacuation.router import router as evacuation_router
 from crisisops.modules.operations.router import router as operations_router

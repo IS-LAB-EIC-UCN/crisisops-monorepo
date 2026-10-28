@@ -1,11 +1,9 @@
 '''T-4.5: El registro inicial de una emergencia se envía y persiste correctamente'''
 
-from sqlalchemy import func, select
-from crisisops.modules.emergencies.enums import EmergencyStatus, EmergencyType
-from crisisops.modules.emergencies.models import Emergency
-from copy import deepcopy
-import pytest
 from httpx import Response
+
+from crisisops.modules.emergencies.enums import EmergencyStatus
+from crisisops.modules.emergencies.models import Emergency
 
 URL_CREATION = "/api/v1/emergencies"
 URL_VALIDATIONS_FIELDS = "/api/v1/emergencies/{emergency_id}/fields"

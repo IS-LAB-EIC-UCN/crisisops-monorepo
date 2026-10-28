@@ -14,6 +14,7 @@ from crisisops.core.database import Base
 from crisisops.modules.emergencies.enums import EmergencyStatus, EmergencyType
 from crisisops.shared.enums import Severity
 
+
 def _utcnow() -> datetime:
     return datetime.now(UTC)
 
