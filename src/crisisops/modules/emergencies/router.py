@@ -1,10 +1,14 @@
-from typing import Annotated
+from collections.abc import Callable, Coroutine
+from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Request, Response, status
+from fastapi.responses import JSONResponse
+from fastapi.routing import APIRoute
 from sqlalchemy.orm import Session
 
 from crisisops.core.database import get_db
 from crisisops.modules.emergencies.enums import Role
+from crisisops.modules.emergencies.exceptions import DomainError
 from crisisops.modules.emergencies.schemas import (
     EmergencyCreate,
     EmergencyRead,
@@ -13,8 +17,30 @@ from crisisops.modules.emergencies.schemas import (
 )
 from crisisops.modules.emergencies.service import EmergenciesService
 
-router = APIRouter(prefix="/emergencies", tags=["Grupo A - Emergencias y evaluación"])
 
+class DomainErrorRoute(APIRoute):
+    """Convierte los errores de dominio del módulo en respuestas HTTP controladas."""
+
+    def get_route_handler(self) -> Callable[[Request], Coroutine[Any, Any, Response]]:
+        original_handler = super().get_route_handler()
+
+        async def handler(request: Request) -> Response:
+            try:
+                return await original_handler(request)
+            except DomainError as error:
+                return JSONResponse(
+                    status_code=error.http_status,
+                    content={"error": error.code, "message": error.message},
+                )
+
+        return handler
+
+
+router = APIRouter(
+    prefix="/emergencies",
+    tags=["Grupo A - Emergencias y evaluación"],
+    route_class=DomainErrorRoute,
+)
 
 @router.get("/health")
 def module_health() -> dict[str, str]:
