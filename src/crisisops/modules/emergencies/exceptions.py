@@ -1,5 +1,6 @@
 '''
-Como no se si esto debe ir en exception de la carpeta core y si se debe integrar aparte DE nuestro modulo y si eso requiere
+Como no se si esto debe ir en exception de la carpeta core y si 
+se debe integrar aparte DE nuestro modulo y si eso requiere
 coordinación con otros modulos, lo escribo
 aquí para ir analizando.
 '''
@@ -25,9 +26,12 @@ class EmergencyValidationError(DomainError):
     http_status = 422
     code = "emergency_validation_error"
 
-    def __init__(self, errors: list[dict]) -> None: #Pasamos como vimos en Validators.py un diccionario con los errores relacionados con Pydantic.
+    def __init__(self, errors: list[dict]) -> None: 
+        #Pasamos como vimos en Validators.py un diccionario con 
+        #los errores relacionados con Pydantic.
         super().__init__(
-            "La emergencia no cumple los requisitos de validación" #Se adjunto un mensaje explicativo
+            "La emergencia no cumple los requisitos de validación" 
+            #Se adjunto un mensaje explicativo
         )
         self.errors = errors # se guarda el diccionario en el atributo errors
 
@@ -37,6 +41,7 @@ class InvalidStateTransition(DomainError):
     code = "invalid_state_transition"
 
 class ExceptionActionRequiresJustification(DomainError):
-    '''Se necesita justificación para una acción, por ejemplo REJECTED un reporte necesita una razón (reason)'''
+    '''Se necesita justificación para una acción, por ejemplo 
+    REJECTED un reporte necesita una razón (reason)'''
     http_status = 422
     code = "justification_required"

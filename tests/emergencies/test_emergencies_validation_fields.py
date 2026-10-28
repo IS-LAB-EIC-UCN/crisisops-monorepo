@@ -24,8 +24,11 @@ VALID_REPORT = {
 }
 
 def _create_emergency(client, report: dict) -> int: 
-    response = client.post(URL_CREATION, json=report) #se enviar el reporte para su creación utilizando URL_CREATION como ruta en donde se encuentra la función 
-    assert  response.status_code == 201, response.text #se comprueba que el status de crespuesta de la creación sea el correcto 201
+    response = client.post(URL_CREATION, json=report) 
+    #se enviar el reporte para su creación utilizando 
+    #URL_CREATION como ruta en donde se encuentra la función 
+    assert  response.status_code == 201, response.text 
+    #se comprueba que el status de crespuesta de la creación sea el correcto 201
     body = response.json() #se obtiene el cuerpo de la respuesta de la creación
     assert "id" in body, body #se verifica que el cuerpo tenga una campo llamado "id"
     return body["id"] #se retorna el id

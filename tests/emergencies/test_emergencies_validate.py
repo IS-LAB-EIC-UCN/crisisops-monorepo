@@ -38,7 +38,8 @@ def _register(client, payload) -> int:
 def test_complete_report_is_validated(client, db_session):
     emergency_id = _register(client, COMPLETE_REPORT)
 
-    emergency = EmergenciesService(db_session).validate_emergency(emergency_id, ValidationDecision(approved=True), Role.OPERATOR,)
+    emergency = EmergenciesService(db_session).validate_emergency(emergency_id, 
+    ValidationDecision(approved=True), Role.OPERATOR,)
 
     assert emergency.status == EmergencyStatus.VALIDATED
 
@@ -47,7 +48,8 @@ def test_incomplete_report_is_rejected_and_stays_reported(client, db_session):
     emergency_id = _register(client, INCOMPLETE_REPORT)
 
     with pytest.raises(EmergencyValidationError):
-        EmergenciesService(db_session).validate_emergency(emergency_id, ValidationDecision(approved=True), Role.OPERATOR,)
+        EmergenciesService(db_session).validate_emergency(emergency_id, 
+        ValidationDecision(approved=True), Role.OPERATOR,)
 
     assert db_session.get(Emergency, emergency_id).status == EmergencyStatus.REPORTED
 
@@ -63,4 +65,5 @@ def test_already_validated_report_cannot_be_validated_again(client, db_session):
 
 def test_unknown_emergency_cannot_be_validated(db_session):
     with pytest.raises(EmergencyNotFound):
-        EmergenciesService(db_session).validate_emergency(9999, ValidationDecision(approved=True), Role.OPERATOR,)
+        EmergenciesService(db_session).validate_emergency(9999, 
+        ValidationDecision(approved=True), Role.OPERATOR,)
