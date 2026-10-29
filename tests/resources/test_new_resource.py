@@ -1,5 +1,7 @@
 from datetime import date
 
+from sqlalchemy import select
+
 from crisisops.modules.resources.models import Resource, implementos
 
 URL = "/api/v1/resources"
@@ -14,7 +16,9 @@ FICHA = {
     "estadoFisico": "BUENO",
 }
 
-def test_registro_valido_responde_201_y_queda_guardado(client, db_session):
+def test_registro_valido(client, db_session):
+    # Responde 201 y queda guardado
+
     response = client.post(URL, json=FICHA)
 
     assert response.status_code == 201
@@ -31,3 +35,13 @@ def test_registro_valido_responde_201_y_queda_guardado(client, db_session):
     assert recurso.estado_recurso == "DISPONIBLE"
     assert implemento is not None
     assert implemento.tipo_uso == "Seguridad"
+
+def test_ficha_incompleta(client, db_session):
+    # Responde 422 y no guarda
+
+    ficha_incompleta = {k: v for k, v in FICHA.items() if k != "tipoUso"}
+
+    response = client.post(URL, json=ficha_incompleta)
+
+    assert response.status_code == 422
+    assert db_session.scalars(select(Resource)).all() == []
