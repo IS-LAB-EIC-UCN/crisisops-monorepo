@@ -45,3 +45,17 @@ def test_ficha_incompleta(client, db_session):
 
     assert response.status_code == 422
     assert db_session.scalars(select(Resource)).all() == []
+
+def test_en_mantenimiento_no_aparece(client):
+    # Responde 200 y solo muestra los recursos DISPONIBLE
+
+    disponible = client.post(URL, json=FICHA).json()
+    client.post(
+        URL, json={**FICHA, "nombreRecurso": "Hacha", "estadoRecurso": "EN MANTENIMIENTO"}
+    )
+
+    response = client.get(f"{URL}/disponibles")
+
+    assert response.status_code == 200
+    ids = [recurso["idRecurso"] for recurso in response.json()]
+    assert ids == [disponible["idRecurso"]]
