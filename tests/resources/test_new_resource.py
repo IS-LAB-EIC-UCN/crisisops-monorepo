@@ -59,3 +59,24 @@ def test_en_mantenimiento_no_aparece(client):
     assert response.status_code == 200
     ids = [recurso["idRecurso"] for recurso in response.json()]
     assert ids == [disponible["idRecurso"]]
+
+def test_recurso_registrado_inmediato(client):
+    # Responde 200 y muestra el recurso registrado
+
+    registrado = client.post(URL, json=FICHA).json()
+
+    response = client.get(f"{URL}/disponibles")
+
+    assert response.status_code == 200
+    listado = {recurso["idRecurso"]: recurso for recurso in response.json()}
+    assert registrado["idRecurso"] in listado
+    assert listado[registrado["idRecurso"]]["nombreRecurso"] == FICHA["nombreRecurso"]
+    assert listado[registrado["idRecurso"]]["estadoRecurso"] == "DISPONIBLE"
+
+def test_recurso_inexistente(client):
+    # Responde 404 e indica que el id no existe
+
+    response = client.get(f"{URL}/999")
+
+    assert response.status_code == 404
+    assert "999" in response.json()["detail"]
