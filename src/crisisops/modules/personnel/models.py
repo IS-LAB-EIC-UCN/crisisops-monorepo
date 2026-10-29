@@ -5,9 +5,19 @@ decisión arquitectónica común documentada.
 """
 from __future__ import annotations
 
+import enum
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, String, UniqueConstraint
+from sqlalchemy import (
+    Boolean,
+    CheckConstraint,
+    DateTime,
+    Enum,
+    ForeignKey,
+    Integer,
+    String,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from crisisops.core.database import Base
@@ -77,17 +87,32 @@ class Shift(Base):
         return self.start_time <= start and self.end_time >= end
 
 
+class AssignmentStatus(enum.StrEnum):
+    RESERVED = "RESERVED"
+    ACTIVE = "ACTIVE"
+    COMPLETED = "COMPLETED"
+    CANCELLED = "CANCELLED"
+
+
 class PersonnelAssignment(Base):
     __tablename__ = "personnel_assignments"
+    __table_args__ = (
+        CheckConstraint("start_at < end_at", name="ck_assignment_start_before_end"),
+    )
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    responder_id: Mapped[int] = mapped_column(ForeignKey("responders.id"), nullable=False)
-    mission_id: Mapped[str] = mapped_column(String(50), nullable=False)
-    start_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    end_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    status: Mapped[str] = mapped_column(String(30), nullable=False, default="RESERVED")
-
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    responder_id: Mapped[int] = mapped_column(
+        ForeignKey("responders.id"), nullable=False, index=True
+    )
+    mission_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    start_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    end_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    status: Mapped[AssignmentStatus] = mapped_column(
+        Enum(AssignmentStatus), nullable=False, default=AssignmentStatus.ACTIVE
+    )
     responder: Mapped[Responder] = relationship(back_populates="assignments")
 
     def overlaps(self, start: datetime, end: datetime) -> bool:
-        return self.start_time < end and self.end_time > start
+        if start >= end:
+            raise ValueError("start debe ser anterior a end")
+        return self.start_at < end and start < self.end_at
