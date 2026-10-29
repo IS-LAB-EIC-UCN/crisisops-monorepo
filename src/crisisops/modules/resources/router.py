@@ -8,6 +8,7 @@ from crisisops.core.exceptions import DomainError
 from crisisops.modules.resources.repository import ResourcesRepository
 from crisisops.modules.resources.schemas import ImplementoIn, ImplementoOut, ResourceDetailOut
 from crisisops.modules.resources.service import ResourcesService
+from crisisops.modules.resources.schemas import CambioEstadoOut
 
 router = APIRouter(prefix="/resources", tags=["Grupo B - Recursos y equipamiento"])
 
@@ -68,3 +69,26 @@ def registrar_recurso(datos: ImplementoIn, service: ServiceDEP) -> ImplementoOut
         return service.registrar_implemento(datos)
     except DomainError as error:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error)) from error
+
+@router.post(
+    "/{id}/mantenimiento",
+    response_model=CambioEstadoOut,
+    status_code=status.HTTP_200_OK,
+    responses={404: {"description": "Recurso no encontrado"},
+               409: {"description": "El recurso no está disponible"}},
+    summary="Enviar un recurso a mantenimiento",
+)
+def enviar_a_mantenimiento(id: int, service: ServiceDEP) -> CambioEstadoOut:
+    return service.enviar_a_mantenimiento(id)
+
+
+@router.post(
+    "/{id}/retorno-servicio",
+    response_model=CambioEstadoOut,
+    status_code=status.HTTP_200_OK,
+    responses={404: {"description": "Recurso no encontrado"},
+               409: {"description": "El recurso no está en mantenimiento"}},
+    summary="Retornar un recurso de mantenimiento a servicio",
+)
+def retornar_a_servicio(id: int, service: ServiceDEP) -> CambioEstadoOut:
+    return service.retornar_a_servicio(id)
