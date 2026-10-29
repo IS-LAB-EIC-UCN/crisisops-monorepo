@@ -80,3 +80,18 @@ def test_recurso_inexistente(client):
 
     assert response.status_code == 404
     assert "999" in response.json()["detail"]
+
+def test_consulta_ficha_id(client):
+    # Responde 200 con los datos de un implemento
+
+    registrado = client.post(URL, json=FICHA).json()
+
+    response = client.get(f"{URL}/{registrado['idRecurso']}")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["tipoRecurso"] == "IMPLEMENTO"
+    assert body["tipoImplemento"] == FICHA["tipoImplemento"]
+    assert body["tipoUso"] == FICHA["tipoUso"]
+    assert body["estadoFisico"] == FICHA["estadoFisico"]
+    assert body["anio"] == registrado["anio"]
