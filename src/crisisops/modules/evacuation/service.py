@@ -2,11 +2,23 @@ from datetime import UTC, datetime, timedelta
 
 from fastapi import HTTPException, status
 
-from crisisops.modules.evacuation.models import EvacuationOrder, EvacuationStatus
-from crisisops.modules.evacuation.repository import SituacionRepository
+from crisisops.modules.evacuation.exceptions import (
+    AdmisionNoEncontrada,
+    OcupacionInconsistente,
+    RefugioNoEncontrado,
+    SalidaYaRegistrada,
+)
+from crisisops.modules.evacuation.models import (
+    AdmissionStatus,
+    EvacuationOrder,
+    EvacuationStatus,
+    ShelterStatus,
+)
+from crisisops.modules.evacuation.repository import SalidaRepository, SituacionRepository
 from crisisops.modules.evacuation.schemas import (
     EvacuationOut,
     MovimientoPersonasOut,
+    SalidaOut,
     SituacionRefugioOut,
 )
 
@@ -87,4 +99,65 @@ class SituacionService:
             movimientos_recientes=[
                 MovimientoPersonasOut.model_validate(m) for m in movimientos
             ],
+        )
+
+
+class SalidaService:
+    """Historia 3: registrar la salida de una persona o grupo y liberar sus cupos."""
+
+    def __init__(self, repository: SalidaRepository) -> None:
+        self.repository = repository
+
+    def registrar_salida(self, refugio_id: int, admision_id: int) -> SalidaOut:
+        """
+        Reglas de negocio:
+        - El refugio debe existir.
+        - La admisión debe existir y pertenecer a ese refugio.
+        - Solo una admisión ACTIVE puede salir (no se liberan cupos dos veces).
+        - La ocupación baja exactamente en las personas de la admisión y nunca queda negativa.
+        - Si el refugio estaba FULL y queda con cupos, vuelve a OPEN.
+        Todo ocurre en una sola transacción: o se aplica completo o no se aplica nada.
+        """
+        try:
+            refugio = self.repository.get_refugio_bloqueado(refugio_id)
+            if refugio is None:
+                raise RefugioNoEncontrado(refugio_id)
+
+            admision = self.repository.get_admision_bloqueada(admision_id)
+            if admision is None or admision.shelter_id != refugio.id:
+                raise AdmisionNoEncontrada(admision_id, refugio_id)
+
+            if admision.status != AdmissionStatus.ACTIVE.value:
+                raise SalidaYaRegistrada(admision_id)
+
+            if refugio.current_occupancy < admision.people_count:
+                raise OcupacionInconsistente(
+                    refugio_id, refugio.current_occupancy, admision.people_count
+                )
+
+            admision.status = AdmissionStatus.DEPARTED.value
+            admision.departed_at = datetime.now(UTC)
+            refugio.current_occupancy -= admision.people_count
+
+            if (
+                refugio.status == ShelterStatus.FULL.value
+                and refugio.current_occupancy < refugio.capacity
+            ):
+                refugio.status = ShelterStatus.OPEN.value
+
+            self.repository.confirmar()
+        except Exception:
+            self.repository.deshacer()
+            raise
+
+        return SalidaOut(
+            admision_id=admision.id,
+            refugio_id=refugio.id,
+            codigo_evacuado=admision.evacuee_code,
+            cupos_liberados=admision.people_count,
+            ocupacion_actual=refugio.current_occupancy,
+            capacidad=refugio.capacity,
+            cupos_disponibles=max(0, refugio.capacity - refugio.current_occupancy),
+            estado_refugio=ShelterStatus(refugio.status),
+            fecha_salida=admision.departed_at,
         )
