@@ -1,0 +1,27 @@
+from enum import StrEnum
+
+
+#SE PUEDEN AGREGAR, OTHER ES CUANDO EL TIPO DE EMERGENCIA NO SE ENCUENTRA EN LAS OPCIONES
+class EmergencyType(StrEnum):
+    FIRE = "FIRE"
+    FLODD = "FLOOD"
+    EARTHQUAKE = "EARTHQUAKE"
+    LANDSLIDE = "LANDSLIDE"
+    MAJOR_ACCIDENT = "MAJOR_ACCIDENT"
+    HAZMAT = "HAZMAT"
+    OTHER = "OTHER"
+
+#SEGÚN LO RECOMENDADO EN EL DOCUMENTO DE CAMPUS VIRTUAL, SE AGREGA CANCELLED Y CONTROLLED
+
+class EmergencyStatus(StrEnum):
+    REPORTED = "REPORTED"
+    VALIDATED = "VALIDATED"
+    REJECTED = "REJECTED"
+    ACTIVE = "ACTIVE"
+    CONTROLLED = "CONTROLLED"
+    CLOSED = "CLOSED"
+    CANCELLED = "CANCELLED"
+
+class Role(StrEnum):
+    '''Por ahora solo operador porque debemos definir que otros rolaes puede tener el sistema'''
+    OPERATOR = "OPERATOR"
