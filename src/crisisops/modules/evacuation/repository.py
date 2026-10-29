@@ -7,6 +7,7 @@ from crisisops.modules.evacuation.models import (
     EvacuationOrder,
     PeopleMovement,
     Shelter,
+    ShelterAvailability,
 )
 
 
@@ -17,6 +18,20 @@ class SituacionRepository:
     def get_evacuations_by_status(self, status: str) -> list[EvacuationOrder]:
         stmt = select(EvacuationOrder).where(EvacuationOrder.status == status)
         return list(self.db.scalars(stmt).all())
+
+    def actualizar_disponibilidad_refugio(
+        self, refugio_id: int, disponibilidad: ShelterAvailability
+    ) -> Shelter | None:
+        refugio = self.db.get(Shelter, refugio_id)
+
+        if refugio is None:
+            return None
+
+        refugio.availability = disponibilidad.value
+        self.db.commit()
+        self.db.refresh(refugio)
+
+        return refugio
 
     def get_vigente(
         self, refugio_id: int, ventana_tiempo: datetime

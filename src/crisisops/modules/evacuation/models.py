@@ -22,6 +22,11 @@ class ShelterStatus(StrEnum):
     CLOSED = "CLOSED"
 
 
+class ShelterAvailability(StrEnum):
+    ENABLED = "ENABLED"
+    DISABLED = "DISABLED"
+
+
 class EvacuationOrder(Base):
     """Modelo para el contrato principal GET /evacuations?status=ACTIVE."""
 
@@ -50,6 +55,12 @@ class Shelter(Base):
     current_occupancy: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     status: Mapped[str] = mapped_column(
         String(30), nullable=False, default=ShelterStatus.OPEN.value
+    )
+    availability: Mapped[str] = mapped_column(
+        String(30),
+        nullable=False,
+        default=ShelterAvailability.ENABLED.value,
+        server_default=ShelterAvailability.ENABLED.value,
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False

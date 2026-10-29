@@ -2,7 +2,12 @@ from datetime import UTC, datetime, timedelta
 
 from fastapi import HTTPException, status
 
-from crisisops.modules.evacuation.models import EvacuationOrder, EvacuationStatus
+from crisisops.modules.evacuation.models import (
+    EvacuationOrder,
+    EvacuationStatus,
+    Shelter,
+    ShelterAvailability,
+)
 from crisisops.modules.evacuation.repository import SituacionRepository
 from crisisops.modules.evacuation.schemas import (
     EvacuationOut,
@@ -88,3 +93,17 @@ class SituacionService:
                 MovimientoPersonasOut.model_validate(m) for m in movimientos
             ],
         )
+    
+    def actualizar_disponibilidad_refugio(self, refugio_id: int, disponibilidad: ShelterAvailability) -> Shelter:
+        refugio = self.repository.actualizar_disponibilidad_refugio(
+            refugio_id=refugio_id,
+            disponibilidad=disponibilidad,
+        )
+
+        if refugio is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Refugio con id {refugio_id} no encontrado.",
+            )
+
+        return refugio

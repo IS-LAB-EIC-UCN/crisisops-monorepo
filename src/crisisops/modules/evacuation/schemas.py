@@ -2,7 +2,10 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict
 
-from crisisops.modules.evacuation.models import EvacuationStatus
+from crisisops.modules.evacuation.models import (
+    EvacuationStatus,
+    ShelterAvailability,
+)
 
 
 class EvacuationOut(BaseModel):
@@ -36,3 +39,14 @@ class SituacionRefugioOut(BaseModel):
     alerta_sobrecupo: bool
     evacuaciones_activas: list[EvacuationOut]
     movimientos_recientes: list[MovimientoPersonasOut]
+
+
+class ShelterAvailabilityUpdate(BaseModel):
+    availability: ShelterAvailability
+
+
+class ShelterAvailabilityOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    availability: ShelterAvailability
