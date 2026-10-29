@@ -1,3 +1,4 @@
+import logging
 from datetime import date
 from typing import Any
 
@@ -5,8 +6,14 @@ from fastapi import HTTPException, status
 
 from crisisops.modules.resources.models import Resource, implementos
 from crisisops.modules.resources.repository import ResourcesRepository
-from crisisops.modules.resources.schemas import ImplementoIn, ImplementoOut
+from crisisops.modules.resources.schemas import (
+    CambioEstadoOut,
+    ImplementoIn,
+    ImplementoOut,
+    ResourceStatus,
+)
 
+logger = logging.getLogger(__name__)
 
 class ResourcesService:
 
@@ -59,4 +66,47 @@ class ResourcesService:
             anio=implemento.año,
             tipoUso=implemento.tipo_uso,
             estadoFisico=implemento.estado_fisico,
+        )
+
+    
+    def enviar_a_mantenimiento(self, id_recurso: int) -> CambioEstadoOut:
+        return self._cambiar_estado(
+        id_recurso,
+        desde=ResourceStatus.DISPONIBLE,
+        hacia=ResourceStatus.EN_MANTENIMIENTO,
+        accion="enviar a mantenimiento",
+    )
+
+    def retornar_a_servicio(self, id_recurso: int) -> CambioEstadoOut:
+        return self._cambiar_estado(
+            id_recurso,
+            desde=ResourceStatus.EN_MANTENIMIENTO,
+            hacia=ResourceStatus.DISPONIBLE,
+            accion="retornar a servicio",
+        )
+
+    def _cambiar_estado(
+        self, id_recurso: int, desde: ResourceStatus, hacia: ResourceStatus, accion: str
+    ) -> CambioEstadoOut:
+        if not self.repository.cambiar_estado(id_recurso, desde.value, hacia.value):
+            recurso = self.repository.obtener_por_id(id_recurso)
+            if recurso is None:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Recurso con id {id_recurso} no encontrado.",
+                )
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=(
+                    f"No se puede {accion}: el recurso está en estado "
+                    f"'{recurso.estado_recurso}' y debe estar en '{desde.value}'."
+                ),
+            )
+        recurso = self.repository.obtener_por_id(id_recurso)
+        logger.info("Recurso %s: %s -> %s", id_recurso, desde.value, hacia.value)
+        return CambioEstadoOut(
+            idRecurso=recurso.id,
+            nombreRecurso=recurso.name,
+            estadoAnterior=desde.value,
+            estadoActual=hacia.value,
         )

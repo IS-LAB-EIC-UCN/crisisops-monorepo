@@ -68,3 +68,11 @@ class ImplementoIn(BaseModel):
 
 
 ResourceDetailOut = ImplementoOut | VehiculoOut | ResourceBaseOut
+
+#-----HU10----
+
+class CambioEstadoOut(BaseModel):
+    idRecurso: int
+    nombreRecurso: str
+    estadoAnterior: str
+    estadoActual: str

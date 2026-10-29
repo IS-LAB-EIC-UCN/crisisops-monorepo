@@ -3,6 +3,7 @@ from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+from sqlalchemy import select, update
 
 from crisisops.modules.resources.models import Resource, Vehiculo, implementos
 
@@ -61,3 +62,17 @@ class ResourcesRepository:
         self.db.refresh(implemento)
 
         return recurso
+    
+    #def de cambio de estado de recurso
+    def cambiar_estado(self, id_recurso: int, desde: str, hacia: str) -> bool:
+        try:
+            resultado = self.db.execute(
+                update(Resource)
+                .where(Resource.id == id_recurso, Resource.estado_recurso == desde)
+                .values(estado_recurso=hacia)
+            )
+            self.db.commit()
+        except Exception:
+            self.db.rollback()
+            raise
+        return resultado.rowcount == 1
