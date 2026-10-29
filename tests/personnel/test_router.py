@@ -1,3 +1,4 @@
+import pytest
 from fastapi.testclient import TestClient
 
 from crisisops.core.exceptions import DomainError
@@ -19,7 +20,7 @@ class MockPersonnelService:
                 f"El personal con ID {responder_id} ya posee una asignación activa que se solapa."
             )
         
-        # Simulamos una creación exitosa para cualquier otro ID usando __init__
+        
         class MockAssignment:
             def __init__(self):
                 self.id = 1
@@ -31,8 +32,13 @@ class MockPersonnelService:
                 
         return MockAssignment()
 
-# Sobrescribimos la dependencia original para usar nuestro mock durante los tests
-app.dependency_overrides[get_personnel_service] = lambda: MockPersonnelService()
+
+@pytest.fixture(autouse=True)
+def usar_mock_service():
+    anteriores = app.dependency_overrides.copy()
+    app.dependency_overrides[get_personnel_service] = lambda: MockPersonnelService()
+    yield
+    app.dependency_overrides = anteriores
 
 
 def test_create_assignment_success():

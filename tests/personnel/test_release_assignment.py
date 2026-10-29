@@ -1,6 +1,7 @@
 from datetime import datetime
 
 import pytest
+from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
@@ -8,7 +9,6 @@ from sqlalchemy.pool import StaticPool
 from crisisops.core.database import Base, get_db
 from crisisops.main import app
 from crisisops.modules.personnel.models import AssignmentStatus, PersonnelAssignment, Responder
-from fastapi.testclient import TestClient
 
 
 @pytest.fixture()
@@ -25,9 +25,10 @@ def db():
 
 @pytest.fixture()
 def client(db):
-    app.dependency_overrides[get_db] = lambda: db
+    anteriores = app.dependency_overrides.copy()  # guarda el mock de test_router.py
+    app.dependency_overrides = {get_db: lambda: db}
     yield TestClient(app)
-    app.dependency_overrides.clear()
+    app.dependency_overrides = anteriores
 
 
 def test_liberar_asignacion_cambia_estado_a_released(db):

@@ -4,11 +4,6 @@ from crisisops.modules.personnel.repository import PersonnelRepository
 from crisisops.modules.personnel.schemas import AssignmentCreate
 
 
-from datetime import datetime
-from typing import List, Optional
-
-
-
 class PersonnelService:
     """Casos de uso y reglas de negocio del módulo personnel."""
 
@@ -59,11 +54,6 @@ class PersonnelService:
 
         return self.repository.create_assignment(assignment)
 
-
-
-    def __init__(self, repository: PersonnelRepository):
-        self.repository = repository
-
     def get_eligible_responders(
         self,
         required_skills,
@@ -82,13 +72,12 @@ class PersonnelService:
 
         eligible_responders = []
 
-        # Obtener solamente los brigadistas activos.
         responders = self.repository.get_active_responders()
 
         for responder in responders:
 
            
-            # RN-4
+        
             covering_shift = self.repository.get_covering_shift(
                 responder.id,
                 start_time,
@@ -103,7 +92,7 @@ class PersonnelService:
            
             for required_skill in required_skills:
 
-                # RN-2:
+            
                 responder_skill = self.repository.responder_has_skill(
                     responder.id,
                     required_skill,
@@ -117,13 +106,14 @@ class PersonnelService:
                 
                 skill = self.repository.get_skill(required_skill)
 
-                # RN-3
+                
                 if skill is not None and skill.requires_certification:
 
                     certification = (
                         self.repository.get_valid_certification(
                             responder.id,
                             required_skill,
+                            start_time,
                             end_time,
                         )
                     )
@@ -133,8 +123,7 @@ class PersonnelService:
                         skills_valid = False
                         break
 
-            # Si falló una competencia o certificación,
-            # se pasa al siguiente brigadista.
+        
             if not skills_valid:
                 continue
 
