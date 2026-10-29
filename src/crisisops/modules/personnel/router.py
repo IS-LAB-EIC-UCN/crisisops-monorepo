@@ -4,7 +4,12 @@ from sqlalchemy.orm import Session
 from crisisops.core.database import get_db
 from crisisops.core.exceptions import DomainError
 from crisisops.modules.personnel.repository import PersonnelRepository
-from crisisops.modules.personnel.schemas import AssignmentCreate, AssignmentResponse
+from crisisops.modules.personnel.schemas import (
+    AssignmentCreate,
+    AssignmentResponse,
+    EligibilityQuery,
+    ResponderOut,
+)
 from crisisops.modules.personnel.service import PersonnelService
 
 router = APIRouter(prefix="/personnel", tags=["Grupo C - Personal y brigadas"])
@@ -41,3 +46,33 @@ def create_responder_assignment(
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)
         ) from e
+
+@router.post(
+    "/responders/eligible",
+    response_model=list[ResponderOut],
+    status_code=status.HTTP_200_OK,
+    summary="Buscar personal elegible por disponibilidad y competencias"
+)
+def find_eligible_responders(
+    query: EligibilityQuery,
+    service: PersonnelService = Depends(get_personnel_service)  # noqa: B008
+):
+    """
+    Retorna la lista de brigadistas que cumplen con las competencias requeridas,
+    tienen un turno que cubre el período, poseen certificación vigente y no 
+    tienen asignaciones solapadas.
+    """
+    if query.start_time >= query.end_time:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, 
+            detail="La fecha de inicio debe ser anterior a la fecha de fin"
+        )
+    
+    # Se asume la firma implementada por Gabriel en T2.4
+    responders = service.get_eligible_responders(
+        required_skills=query.required_skills,
+        start_time=query.start_time,
+        end_time=query.end_time
+    )
+    
+    return responders
