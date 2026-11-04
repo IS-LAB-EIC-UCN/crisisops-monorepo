@@ -40,6 +40,10 @@ FAKE_EMERGENCIES: dict[int, str] = {
     4: "REJECTED",
 }
 
+# Catálogos simulados: tipos de recurso de Grupo B y perfiles (skills.code) de Grupo C.
+FAKE_RESOURCE_TYPES: set[str] = {"IMPLEMENTO", "VEHICULO"}
+FAKE_PERSONNEL_PROFILES: set[str] = {"PARAMEDIC", "DRIVER", "FIREFIGHTER"}
+
 
 @pytest.fixture()
 def db_session() -> Generator[Session, None, None]:
@@ -79,6 +83,30 @@ class FakeEmergencyService:
         return self.emergencies.get(emergency_id)
 
 
+class FakeCatalogService:
+    """Simula el catálogo de B o C: devuelve los códigos válidos o falla si está caído."""
+
+    def __init__(self, codes: set[str], group: str) -> None:
+        self.codes = codes
+        self.group = group
+        self.available = True
+
+    def get_codes(self) -> set[str]:
+        if not self.available:
+            raise ConnectionError(f"Grupo {self.group} no disponible")
+        return self.codes
+
+
+@pytest.fixture()
+def resource_catalog() -> FakeCatalogService:
+    return FakeCatalogService(set(FAKE_RESOURCE_TYPES), "B")
+
+
+@pytest.fixture()
+def personnel_catalog() -> FakeCatalogService:
+    return FakeCatalogService(set(FAKE_PERSONNEL_PROFILES), "C")
+
+
 @pytest.fixture()
 def emergency_service() -> FakeEmergencyService:
     return FakeEmergencyService(dict(FAKE_EMERGENCIES))
@@ -97,10 +125,15 @@ def api_client(
     client: TestClient,
     db_session: Session,
     get_emergency_status: Callable[[int], str | None],
+    resource_catalog: FakeCatalogService,
+    personnel_catalog: FakeCatalogService,
 ) -> TestClient:
-    """Cliente HTTP cuyo service consulta al Grupo A simulado en vez del real."""
+    """Cliente HTTP cuyo service consulta a los Grupos A, B y C simulados en vez de los reales."""
     app.dependency_overrides[get_operations_service] = lambda: OperationsService(
-        get_emergency_status, OperationsRepository(db_session)
+        get_emergency_status,
+        OperationsRepository(db_session),
+        get_resource_types=resource_catalog.get_codes,
+        get_personnel_profiles=personnel_catalog.get_codes,
     )
     return client
 

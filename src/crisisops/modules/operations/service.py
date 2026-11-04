@@ -35,6 +35,16 @@ def get_emergency_status_from_group_a(emergency_id: int) -> str | None:
     raise ConnectionError("El módulo de emergencias (Grupo A) aún no está integrado.")
 
 
+def get_resource_types_from_group_b() -> set[str]:
+    """Consulta los tipos de recurso de Grupo B. Mientras B no los exponga, no responde."""
+    raise ConnectionError("El catálogo de tipos de recurso (Grupo B) aún no está disponible.")
+
+
+def get_personnel_profiles_from_group_c() -> set[str]:
+    """Consulta los perfiles (skills) de Grupo C. Mientras C no los exponga, no responde."""
+    raise ConnectionError("El catálogo de perfiles de personal (Grupo C) aún no está disponible.")
+
+
 class OperationsService:
     """Casos de uso y reglas de negocio del módulo operations."""
 
@@ -42,8 +52,12 @@ class OperationsService:
         self,
         get_emergency_status: Callable[[int], str | None],
         repository: OperationsRepository,
+        get_resource_types: Callable[[], set[str]] = get_resource_types_from_group_b,
+        get_personnel_profiles: Callable[[], set[str]] = get_personnel_profiles_from_group_c,
     ) -> None:
         self._get_emergency_status = get_emergency_status
+        self._get_resource_types = get_resource_types
+        self._get_personnel_profiles = get_personnel_profiles
         self.repository = repository
 
     def validate_emergency(self, emergency_id: int) -> None:
