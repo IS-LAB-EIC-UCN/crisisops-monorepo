@@ -132,3 +132,23 @@ def create_emegency(
     
     emergency = EmergenciesService(db).create_emergency(payload)
     return EmergencyRead.model_validate(emergency)
+
+
+@router.get(
+    "/{emergency_id}",
+    response_model=EmergencyRead,
+    status_code=status.HTTP_200_OK,
+    summary="Consultar una emergencia (estado y nivel de severidad)",
+    description = (
+        "Devuelve los datos vigentes de la emergencia "
+        ", incluidos su estado (status) y su nivel de "
+        "severidad (severity, nulo si aun no se ha asignado)"       
+    ),
+)
+
+def get_emergency(
+    emergency_id : int,
+    db: Annotated[Session, Depends(get_db)]
+) -> EmergencyRead:
+    emergency = EmergenciesService(db).get_or_raise(emergency_id)
+    return EmergencyRead.model_validate(emergency)
