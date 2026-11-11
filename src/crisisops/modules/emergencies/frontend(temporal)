@@ -2,6 +2,12 @@
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CrisisOps | Emergencias</title>
 <style>
 :root{font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;color:#17283d;background:#f3f6fa}*{box-sizing:border-box}body{margin:0}.top{background:#14243c;color:white;padding:19px max(24px,calc((100vw - 1100px)/2));display:flex;justify-content:space-between;align-items:center;gap:15px}.brand{font-size:23px;font-weight:800;letter-spacing:-.7px}.brand span{color:#67d4c0}.top small{color:#c4d2e3}.shell{max-width:1100px;margin:34px auto;padding:0 22px}.eyebrow{color:#087f7c;font-size:12px;text-transform:uppercase;letter-spacing:1.4px;font-weight:800}.heading{font-size:30px;letter-spacing:-.8px;margin:8px 0}.intro{color:#64748b;margin:0 0 24px;line-height:1.5}.layout{display:grid;grid-template-columns:1.55fr 1fr;gap:20px}.panel{background:white;border:1px solid #e1e8f0;border-radius:15px;padding:25px;box-shadow:0 6px 24px #172b4d0a}.panel h2{font-size:19px;margin:0 0 7px}.muted{color:#718096;font-size:13px;margin:0 0 21px;line-height:1.5}.fields{display:grid;grid-template-columns:1fr 1fr;gap:16px}.field{display:flex;flex-direction:column;gap:7px}.full{grid-column:1/-1}label{font-size:13px;font-weight:650}label span{color:#c04444}input,select,textarea{width:100%;font:inherit;font-size:14px;border:1px solid #d4dce6;border-radius:8px;padding:11px 12px;background:white;color:#26344a;outline:none}input:focus,select:focus,textarea:focus{border-color:#138e8b;box-shadow:0 0 0 3px #138e8b1a}input[readonly]{background:#f6f8fb;color:#6c7889}textarea{min-height:104px;resize:vertical}.hint{font-size:11px;color:#7b8796}.actions{display:flex;gap:10px;margin-top:21px;flex-wrap:wrap}button{cursor:pointer;font-weight:700;border-radius:8px;border:1px solid #ccd6e0;padding:11px 15px;background:white;color:#344054}button.primary{background:#087e79;color:white;border-color:#087e79}button:hover{filter:brightness(.96)}button:disabled{opacity:.5;cursor:not-allowed}.summary{background:#f7f9fc;border:1px solid #e5ebf2;border-radius:10px;padding:16px;margin-bottom:16px}.summary-row{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:12px 0;font-size:13px}.summary-row span:first-child{color:#64748b}.summary-row strong{text-align:right;overflow-wrap:anywhere}.pill{display:inline-flex;align-items:center;padding:5px 10px;border-radius:20px;background:#fff3d9;color:#936600;font-size:12px;font-weight:750}.pill.ok{background:#ddf6ed;color:#147c58}.pill.bad{background:#fee9e8;color:#b33636}.notice{font-size:13px;border-radius:9px;padding:13px 14px;background:#eaf5ff;color:#285e85;line-height:1.55;white-space:pre-line}.notice.error{background:#fff0ef;color:#9e3333}.notice.success{background:#e7f7ef;color:#146944}.history{margin-top:20px;font-size:13px;color:#64748b}.history strong{color:#334155}.history p{margin:9px 0}.foot{margin:28px 0;text-align:center;color:#94a3b8;font-size:12px}@media(max-width:800px){.layout{grid-template-columns:1fr}.top{padding:17px 22px}.heading{font-size:25px}}@media(max-width:500px){.fields{grid-template-columns:1fr}.panel{padding:18px}.top small{font-size:11px}}
+.pill.sev-low{background:#ddf6ed;color:#147c58}.pill.sev-
+medium{background:#fff3d9;color:#936600}.pill.sev-
+high{background:#ffe6d5;color:#b25410}.pill-sev-
+critical{background:#ffe9e8;color:#b25410}.pill.none{background:#eef1f5;color:#64748b}
+.query-form{display:flex;gap:10px;flex:wrap:margin:0 0 16px}.query-form
+input{max-width:260px}
 </style></head><body>
 <header class="top"><div class="brand">Crisis<span>Ops</span></div><small>Grupo A · Emergencias y evaluación</small></header>
 <main class="shell"><div class="eyebrow">Panel de gestión · Sprint 1</div><h1 class="heading">Registro de emergencias</h1><p class="intro">Registra una emergencia con datos mínimos en estado <b>REPORTED</b>. Después completa sus antecedentes y valida el reporte.</p>
@@ -23,8 +29,90 @@
 <div class="actions"><button type="button" class="primary" id="validate">Validar reporte</button><button type="button" id="check">Revisar campos</button></div>
 <div class="history"><strong>Historias del Sprint 1</strong><p>HU-04 · Registro inicial (REPORTED)</p><p>HU-05 · Detección de datos faltantes</p><p>HU-01 · Validación (VALIDATED)</p></div>
 </aside></div><p class="foot">CrisisOps · Prototipo local </p></main>
+<section class="panel" id="queryPanel" style="margin-top:20px">
+<h2>
+    Consultar Emergencia
+</h2>
+<p class="muted">Consulta el estado y el nivel de severidad vigentes de una emergencia registrada en el backend</p>
+<form id="queryForm" class="query-form" novalidate>
+    <input id="query_id" type="number" min="1" placeholder="Id de la emergencia (ej.: 1)" aria-label="Id de la emergencia">
+    <button class="primary" type="submit" id="queryBtn">Consultar</button>
+</form>
+<div class="summary" id="queryResult" hidden>
+    <div class="summary-row">
+        <span>Identificador (id)</span>
+        <strong id = "q_id"></strong>
+    </div>
+
+    <div class="summary-row">
+        <span>Título</span>
+        <strong id = "q_title"></strong>
+    </div>
+
+    <div class="summary-row">
+        <span>Estado (status)</span>
+        <span class="pill" id=""q_status></span>
+    </div>
+    <div class="summary-row">
+        <span>Nivel de severidad (severity)</span>
+        <span class="pill" id="q_severity"></span>
+    </div>
+    <div class="summary-row">
+        <span>Ultima actualización</span>
+        <strong id="q_updated"></strong>
+    </div>
+</div>
+<div class="notice" id="queryMessage" role="status" aria-live="polite">
+    Ingresa el id de una emergencia para consultar su estado y severidad.
+</div>
+</section>
 
 <script>
+
+const API_BASE='http://localhost:8000/api/v1';
+const STATUS_LABEL={REPORTED:'Reportada (REPORTED)', VALIDATED:'Validad (VALIDATED)',
+REJECTED:'Rechazada (REJECTED)', ACTIVE:'Activa (ACTIVE)', CONTROLLED:'Controlada (CONTROLLED)',
+CLOSED:'Cerrada (CLOSED)', CANCELLED:'Cancelada (CANCELLED)'};
+const STATUS_KIND=
+{VALIDATED:'ok', ACTIVE:'ok', CONTROLLED:'ok', CLOSED:'ok', REJECTED:'bad', CANCELLED:'bad'};
+const SEVERITY_LABEL={LOW:'Baja (LOW)', MEDIUM:'Media (MEDIUM)', HIGH:'Alta (HIGH)',
+    CRITICAL:'Crítica (CRITICAL)'
+};
+function queryNotify(message, kind='')
+{el('queryMessage').textContent=message,el('queryMessage').className='notice '+kind}
+async function fetchEmergency(id){
+    let response;
+    try{response=await fetch(`${API_BASE}/emergencies/${id}}`)}
+    catch{throw new Error('No se pudo conectar con el backend. Verifica que esté en ejecución y que permita est origen (CORS).')}
+    if(response.status===404)throw new Error(`No existe una emergencia con id ${id}.`);
+    if(!response.ok)throw new Error(`El servidor respondió con el código ${response.status}.`);
+    return response.json();
+}
+function renderEmergency(e){
+    el('q_id').textContent=e.id;
+    el('q_tile').textContent=e.title||'Sin título';
+    el('q_status').textContent=STATUS_LABEL[e.status]||e.status;
+    el('q_status').className='pill '+(STATUS_KIND[e.status]||'');
+    el('q_severity').textContent=e.severity?
+    (SEVERITY_LABEL[e.severity]||e.severity):'Sin asignar';
+    el('q_severity').className='pill '+(e.severity?'sev-'+e.severity.toLowerCase():'none');
+    el('q_updated').textContent=new Date(e.updated_at).toLocalString('es-CL');
+    el('queryResult').hidden=false;
+}
+async function queryEmergency(id){
+    el('queryBtn').disabled=true;
+    try{renderEmergency(await fetchEmergency(id));
+        queryNotify('Datos actualizados desde el backend.', 'success')
+    }
+    catch(error){el('queryResult').hidden=true;queryNotify(error.message,'error')}
+    finally{el('queryBtn').disabled=false}
+}
+el('queryForm').onsubmit=event=>{
+    event.preventDefault();
+    const id=Number(el('query_id').value);
+    if(!Number.isInteger(id)||id<1){el('queryResult').hidden=true;queryNotify('Ingresa un id numérico válido (1 o mayor).', 'error');return}
+    queryEmergency(id);
+};
 
 const el=id=>document.getElementById(id);
 const initial=['type','title','location_description'];
