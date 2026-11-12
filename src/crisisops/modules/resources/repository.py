@@ -1,11 +1,16 @@
 from collections.abc import Sequence
+from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import select
-from sqlalchemy.orm import Session
 from sqlalchemy import select, update
+from sqlalchemy.orm import Session
 
-from crisisops.modules.resources.models import Resource, Vehiculo, implementos
+from crisisops.modules.resources.models import (
+    Resource,
+    Vehiculo,
+    historial_mantenimiento,
+    implementos,
+)
 
 
 class ResourcesRepository:
@@ -64,15 +69,30 @@ class ResourcesRepository:
         return recurso
     
     #def de cambio de estado de recurso
-    def cambiar_estado(self, id_recurso: int, desde: str, hacia: str) -> bool:
+    def cambiar_estado(
+        self, id_recurso: int, desde: str, hacia: str, descripcion: str
+    ) -> bool:
         try:
             resultado = self.db.execute(
                 update(Resource)
                 .where(Resource.id == id_recurso, Resource.estado_recurso == desde)
                 .values(estado_recurso=hacia)
             )
+            if resultado.rowcount != 1:
+                self.db.rollback()
+                return False
+
+            self.db.add(
+                historial_mantenimiento(
+                    id_recursos=id_recurso,
+                    estado_anterior=desde,
+                    estado_nuevo=hacia,
+                    fecha_mantenimiento=datetime.now(UTC),
+                    descripcion=descripcion,
+                )
+            )
             self.db.commit()
         except Exception:
             self.db.rollback()
             raise
-        return resultado.rowcount == 1
+        return True

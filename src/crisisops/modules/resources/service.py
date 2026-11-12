@@ -68,14 +68,14 @@ class ResourcesService:
             estadoFisico=implemento.estado_fisico,
         )
 
-    
+    #------ HU10 --------
     def enviar_a_mantenimiento(self, id_recurso: int) -> CambioEstadoOut:
         return self._cambiar_estado(
-        id_recurso,
-        desde=ResourceStatus.DISPONIBLE,
-        hacia=ResourceStatus.EN_MANTENIMIENTO,
-        accion="enviar a mantenimiento",
-    )
+            id_recurso,
+            desde=ResourceStatus.DISPONIBLE,
+            hacia=ResourceStatus.EN_MANTENIMIENTO,
+            accion="enviar a mantenimiento",
+        )
 
     def retornar_a_servicio(self, id_recurso: int) -> CambioEstadoOut:
         return self._cambiar_estado(
@@ -88,7 +88,9 @@ class ResourcesService:
     def _cambiar_estado(
         self, id_recurso: int, desde: ResourceStatus, hacia: ResourceStatus, accion: str
     ) -> CambioEstadoOut:
-        if not self.repository.cambiar_estado(id_recurso, desde.value, hacia.value):
+        if not self.repository.cambiar_estado(
+            id_recurso, desde.value, hacia.value, descripcion=accion
+        ):
             recurso = self.repository.obtener_por_id(id_recurso)
             if recurso is None:
                 raise HTTPException(

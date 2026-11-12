@@ -70,6 +70,7 @@ def registrar_recurso(datos: ImplementoIn, service: ServiceDEP) -> ImplementoOut
     except DomainError as error:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error)) from error
 
+# -------HU10-------
 @router.post(
     "/{id}/mantenimiento",
     response_model=CambioEstadoOut,

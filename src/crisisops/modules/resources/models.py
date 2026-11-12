@@ -4,9 +4,9 @@ Regla: este archivo no debe importar modelos ORM de otros módulos sin una
 decisión arquitectónica común documentada.
 """
 
-from datetime import date
+from datetime import date, datetime
 
-from sqlalchemy import Date, Float, ForeignKey, Integer, String
+from sqlalchemy import Date, DateTime, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from crisisops.core.database import Base
@@ -44,3 +44,15 @@ class Vehiculo(Base):
     ancho: Mapped[float] = mapped_column(Float, nullable=False)
     largo: Mapped[float] = mapped_column(Float, nullable=False)
     altura: Mapped[float] = mapped_column(Float,nullable=False)
+
+class historial_mantenimiento(Base):
+    __tablename__ = 'historial_mantenimiento'
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    id_recursos: Mapped[int] = mapped_column(Integer, ForeignKey('recursos.id'), nullable=False)
+    estado_anterior: Mapped[str] = mapped_column(String(30), nullable=False)
+    estado_nuevo: Mapped[str] = mapped_column(String(30), nullable=False)
+    fecha_mantenimiento: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    descripcion: Mapped[str] = mapped_column(String(255), nullable=False)
