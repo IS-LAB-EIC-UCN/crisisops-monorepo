@@ -6,6 +6,7 @@ from crisisops.modules.evacuation.exceptions import (
     AdmisionNoEncontrada,
     OcupacionInconsistente,
     RefugioNoEncontrado,
+    RefugioSinCupos,
     SalidaYaRegistrada,
 )
 from crisisops.modules.evacuation.models import (
@@ -14,8 +15,13 @@ from crisisops.modules.evacuation.models import (
     EvacuationStatus,
     ShelterStatus,
 )
-from crisisops.modules.evacuation.repository import SalidaRepository, SituacionRepository
+from crisisops.modules.evacuation.repository import (
+    AdmisionRepository,
+    SalidaRepository,
+    SituacionRepository,
+)
 from crisisops.modules.evacuation.schemas import (
+    AdmisionOut,
     EvacuationOut,
     MovimientoPersonasOut,
     SalidaOut,
@@ -100,6 +106,42 @@ class SituacionService:
                 MovimientoPersonasOut.model_validate(m) for m in movimientos
             ],
         )
+
+
+class AdmisionService:
+    def __init__(self, repository: AdmisionRepository) -> None:
+        self.repository = repository
+
+    def registrar_admision(
+        self,
+        refugio_id: int,
+        codigo_evacuado: str,
+        personas: int,
+    ) -> AdmisionOut:
+        try:
+            refugio = self.repository.get_refugio_bloqueado(refugio_id)
+            if refugio is None:
+                raise RefugioNoEncontrado(refugio_id)
+
+            cupos_disponibles = refugio.capacity - refugio.current_occupancy
+            if personas > cupos_disponibles:
+                raise RefugioSinCupos(refugio_id, max(0, cupos_disponibles), personas)
+
+            admision = self.repository.guardar_admision(
+                refugio_id=refugio.id,
+                codigo_evacuado=codigo_evacuado,
+                personas=personas,
+            )
+            refugio.current_occupancy += personas
+            if refugio.current_occupancy == refugio.capacity:
+                refugio.status = ShelterStatus.FULL.value
+
+            self.repository.confirmar()
+        except Exception:
+            self.repository.deshacer()
+            raise
+
+        return AdmisionOut.model_validate(admision)
 
 
 class SalidaService:

@@ -54,3 +54,19 @@ class SalidaOut(BaseModel):
     cupos_disponibles: int
     estado_refugio: ShelterStatus
     fecha_salida: datetime
+
+
+class AdmisionIn(BaseModel):
+    evacuee_code: str = Field(min_length=1, max_length=50)
+    people_count: int = Field(gt=0)
+
+
+class AdmisionOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    shelter_id: int
+    evacuee_code: str
+    people_count: int
+    status: str
+    admitted_at: datetime
