@@ -2,6 +2,14 @@
 
 URL = "/api/v1/emergencies"
 
+
+def test_panel_is_served_as_html_before_the_id_route(client):
+    response = client.get(f"{URL}/panel")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/html")
+    assert 'id="queryForm"' in response.text
+
 REPORT_WITH_SEVERITY = {
     "type": "FIRE",
     "date_time": "2026-10-20T10:00:00Z",

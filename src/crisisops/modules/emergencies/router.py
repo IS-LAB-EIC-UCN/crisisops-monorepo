@@ -1,8 +1,9 @@
 from collections.abc import Callable, Coroutine
+from pathlib import Path
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Request, Response, status
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.routing import APIRoute
 from sqlalchemy.orm import Session
 
@@ -41,6 +42,14 @@ router = APIRouter(
     tags=["Grupo A - Emergencias y evaluación"],
     route_class=DomainErrorRoute,
 )
+
+@router.get("/panel", response_class=FileResponse, include_in_schema=False)
+def emergency_panel() -> FileResponse:
+    """entrega el HTML del panel para abrirlo desde la API
+    asi la pantalla puede consultar las emergencias usando la misma dirección
+    del servidor sin necesitar permisos adicionales de conexión
+    """
+    return FileResponse(Path(__file__).with_name("frontend(temporal)"), media_type="text/html")
 
 @router.get("/health")
 def module_health() -> dict[str, str]:
