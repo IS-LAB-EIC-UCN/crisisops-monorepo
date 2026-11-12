@@ -1,7 +1,7 @@
 from datetime import datetime
 from enum import StrEnum
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, func
+from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Integer, String, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from crisisops.core.database import Base
@@ -71,3 +71,30 @@ class PeopleMovement(Base):
     recorded_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
+
+
+class AdmissionStatus(StrEnum):
+    ACTIVE = "ACTIVE"
+    DEPARTED = "DEPARTED"
+
+
+class ShelterAdmission(Base):
+
+    __tablename__ = "shelter_admissions"
+    __table_args__ = (
+        CheckConstraint("people_count > 0", name="ck_shelter_admissions_people_count_positive"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    shelter_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("shelters.id"), nullable=False, index=True
+    )
+    evacuee_code: Mapped[str] = mapped_column(String(50), nullable=False)
+    people_count: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    status: Mapped[str] = mapped_column(
+        String(20), nullable=False, default=AdmissionStatus.ACTIVE.value
+    )
+    admitted_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    departed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

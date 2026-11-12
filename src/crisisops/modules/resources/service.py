@@ -22,13 +22,17 @@ class ResourcesService:
             tipo=tipo, capacidad_minima=capacidad_min
         )
 
-    def obtener_recurso_por_id(self, id_recurso: int) -> dict[str, Any]:
+    def obtener_recurso_por_id(self, id_recurso: int) -> ImplementoOut | Resource:
         recurso = self.repository.obtener_por_id(id_recurso)
         if not recurso:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Recurso con id {id_recurso} no encontrado.",
             )
+        implemento = self.repository.obtener_implemento(id_recurso)
+
+        if implemento is not None:
+            return self._a_implemento_out(recurso, implemento)
         return recurso
 
     def registrar_implemento(self, datos: ImplementoIn) -> ImplementoOut:
@@ -49,6 +53,10 @@ class ResourcesService:
 
         self.repository.guardar_implemento(recurso, implemento)
 
+        return self._a_implemento_out(recurso, implemento)
+
+    @staticmethod
+    def _a_implemento_out(recurso: Resource, implemento: implementos) -> ImplementoOut:
         return ImplementoOut(
             idRecurso=recurso.id,
             nombreRecurso=recurso.name,

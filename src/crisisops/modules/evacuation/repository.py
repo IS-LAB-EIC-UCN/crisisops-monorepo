@@ -7,6 +7,7 @@ from crisisops.modules.evacuation.models import (
     EvacuationOrder,
     PeopleMovement,
     Shelter,
+    ShelterAdmission,
 )
 
 
@@ -38,3 +39,59 @@ class SituacionRepository:
         movimientos = list(self.db.scalars(stmt_movimientos).all())
 
         return refugio, evacuaciones, movimientos
+
+
+class SalidaRepository:
+    """Persistencia de la Historia 3: registrar salidas de un refugio."""
+
+    def __init__(self, db: Session) -> None:
+        self.db = db
+
+    def get_refugio_bloqueado(self, refugio_id: int) -> Shelter | None:
+
+        stmt = select(Shelter).where(Shelter.id == refugio_id).with_for_update()
+        return self.db.scalars(stmt).first()
+
+    def get_admision_bloqueada(self, admision_id: int) -> ShelterAdmission | None:
+        stmt = (
+            select(ShelterAdmission)
+            .where(ShelterAdmission.id == admision_id)
+            .with_for_update()
+        )
+        return self.db.scalars(stmt).first()
+
+    def confirmar(self) -> None:
+        self.db.commit()
+
+    def deshacer(self) -> None:
+        self.db.rollback()
+
+
+class AdmisionRepository:
+    def __init__(self, db: Session) -> None:
+        self.db = db
+
+    def get_refugio_bloqueado(self, refugio_id: int) -> Shelter | None:
+        stmt = select(Shelter).where(Shelter.id == refugio_id).with_for_update()
+        return self.db.scalars(stmt).first()
+
+    def guardar_admision(
+        self,
+        refugio_id: int,
+        codigo_evacuado: str,
+        personas: int,
+    ) -> ShelterAdmission:
+        admision = ShelterAdmission(
+            shelter_id=refugio_id,
+            evacuee_code=codigo_evacuado,
+            people_count=personas,
+        )
+        self.db.add(admision)
+        self.db.flush()
+        return admision
+
+    def confirmar(self) -> None:
+        self.db.commit()
+
+    def deshacer(self) -> None:
+        self.db.rollback()
