@@ -8,17 +8,24 @@ from crisisops.modules.evacuation.exceptions import (
     AdmisionNoEncontrada,
     OcupacionInconsistente,
     RefugioNoEncontrado,
+    RefugioSinCupos,
     SalidaYaRegistrada,
 )
 from crisisops.modules.evacuation.models import EvacuationStatus
-from crisisops.modules.evacuation.repository import SalidaRepository, SituacionRepository
+from crisisops.modules.evacuation.repository import (
+    AdmisionRepository,
+    SalidaRepository,
+    SituacionRepository,
+)
 from crisisops.modules.evacuation.schemas import (
+    AdmisionIn,
+    AdmisionOut,
     EvacuationOut,
     SalidaIn,
     SalidaOut,
     SituacionRefugioOut,
 )
-from crisisops.modules.evacuation.service import SalidaService, SituacionService
+from crisisops.modules.evacuation.service import AdmisionService, SalidaService, SituacionService
 
 router = APIRouter(prefix="/evacuation", tags=["Grupo E - Evacuación, refugios y alertas"])
 
@@ -67,6 +74,37 @@ def health_check() -> dict:
 
 def get_salida_service(db: Annotated[Session, Depends(get_db)]) -> SalidaService:
     return SalidaService(SalidaRepository(db))
+
+
+def get_admision_service(db: Annotated[Session, Depends(get_db)]) -> AdmisionService:
+    return AdmisionService(AdmisionRepository(db))
+
+
+@router.post(
+    "/shelters/{refugio_id}/admissions",
+    response_model=AdmisionOut,
+    status_code=status.HTTP_201_CREATED,
+    responses={
+        404: {"description": "Refugio no encontrado"},
+        409: {"description": "No existen cupos suficientes en el refugio"},
+    },
+    summary="Registrar el ingreso de una persona o grupo",
+)
+def registrar_admision(
+    refugio_id: Annotated[int, Path(gt=0, description="ID del refugio")],
+    datos: AdmisionIn,
+    service: Annotated[AdmisionService, Depends(get_admision_service)],
+) -> AdmisionOut:
+    try:
+        return service.registrar_admision(
+            refugio_id=refugio_id,
+            codigo_evacuado=datos.evacuee_code,
+            personas=datos.people_count,
+        )
+    except RefugioNoEncontrado as error:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
+    except RefugioSinCupos as error:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(error)) from error
 
 
 @router.post(

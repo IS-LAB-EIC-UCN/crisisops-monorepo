@@ -96,3 +96,6 @@ class ResourcesRepository:
             self.db.rollback()
             raise
         return True
+
+    def obtener_implemento(self, id_recurso: int) -> implementos | None:
+        return self.db.get(implementos, id_recurso)
