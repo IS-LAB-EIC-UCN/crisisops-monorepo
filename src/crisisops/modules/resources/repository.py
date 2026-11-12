@@ -61,3 +61,6 @@ class ResourcesRepository:
         self.db.refresh(implemento)
 
         return recurso
+
+    def obtener_implemento(self, id_recurso: int) -> implementos | None:
+        return self.db.get(implementos, id_recurso)
