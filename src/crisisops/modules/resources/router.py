@@ -6,9 +6,13 @@ from sqlalchemy.orm import Session
 from crisisops.core.database import get_db
 from crisisops.core.exceptions import DomainError
 from crisisops.modules.resources.repository import ResourcesRepository
-from crisisops.modules.resources.schemas import ImplementoIn, ImplementoOut, ResourceDetailOut
+from crisisops.modules.resources.schemas import (
+    CambioEstadoOut,
+    ImplementoIn,
+    ImplementoOut,
+    ResourceDetailOut,
+)
 from crisisops.modules.resources.service import ResourcesService
-from crisisops.modules.resources.schemas import CambioEstadoOut
 
 router = APIRouter(prefix="/resources", tags=["Grupo B - Recursos y equipamiento"])
 

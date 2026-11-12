@@ -1,9 +1,8 @@
 from collections.abc import Sequence
 from typing import Any
 
-from sqlalchemy import select
-from sqlalchemy.orm import Session
 from sqlalchemy import select, update
+from sqlalchemy.orm import Session
 
 from crisisops.modules.resources.models import Resource, Vehiculo, implementos
 
