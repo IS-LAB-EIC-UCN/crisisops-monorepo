@@ -28,3 +28,12 @@ class OcupacionInconsistente(DomainError):
             f"La ocupación del refugio {refugio_id} ({ocupacion}) es menor que las "
             f"personas de la admisión ({personas}); la salida dejaría ocupación negativa."
         )
+
+
+class RefugioSinCupos(DomainError):
+    def __init__(self, refugio_id: int, cupos_disponibles: int, personas_solicitadas: int) -> None:
+        super().__init__(
+            f"El refugio {refugio_id} no tiene cupos suficientes. "
+            f"Cupos disponibles: {cupos_disponibles}; "
+            f"personas solicitadas: {personas_solicitadas}."
+        )

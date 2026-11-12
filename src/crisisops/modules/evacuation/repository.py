@@ -65,3 +65,33 @@ class SalidaRepository:
 
     def deshacer(self) -> None:
         self.db.rollback()
+
+
+class AdmisionRepository:
+    def __init__(self, db: Session) -> None:
+        self.db = db
+
+    def get_refugio_bloqueado(self, refugio_id: int) -> Shelter | None:
+        stmt = select(Shelter).where(Shelter.id == refugio_id).with_for_update()
+        return self.db.scalars(stmt).first()
+
+    def guardar_admision(
+        self,
+        refugio_id: int,
+        codigo_evacuado: str,
+        personas: int,
+    ) -> ShelterAdmission:
+        admision = ShelterAdmission(
+            shelter_id=refugio_id,
+            evacuee_code=codigo_evacuado,
+            people_count=personas,
+        )
+        self.db.add(admision)
+        self.db.flush()
+        return admision
+
+    def confirmar(self) -> None:
+        self.db.commit()
+
+    def deshacer(self) -> None:
+        self.db.rollback()
