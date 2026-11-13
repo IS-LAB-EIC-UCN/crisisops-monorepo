@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from crisisops.core.database import get_db
 from crisisops.core.exceptions import DomainError
 from crisisops.modules.resources.repository import ResourcesRepository
-from crisisops.modules.resources.schemas import ImplementoIn, ImplementoOut, ResourceDetailOut
+from crisisops.modules.resources.schemas import ImplementoIn, ImplementoOut, ResourceDetailOut, ValidacionCertificacionIn, ValidacionCertificacionOut
 from crisisops.modules.resources.service import ResourcesService
 
 router = APIRouter(prefix="/resources", tags=["Grupo B - Recursos y equipamiento"])
@@ -68,3 +68,23 @@ def registrar_recurso(datos: ImplementoIn, service: ServiceDEP) -> ImplementoOut
         return service.registrar_implemento(datos)
     except DomainError as error:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error)) from error
+
+# POST /resources/validacion
+@router.post(
+    "/validacion",
+    response_model=ValidacionCertificacionOut,
+    status_code=status.HTTP_200_OK,
+    responses={400: {"description": "Operador sin certificación válida"}},
+    summary="Validar si un operador cuenta con certificación vigente para una habilidad",
+)
+def validar_certificacion(
+    datos: ValidacionCertificacionIn,
+    service: ServiceDEP,
+) -> ValidacionCertificacionOut:
+    try:
+        return service.validar_certificacion_operador(datos)
+    except DomainError as error:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(error),
+        ) from error

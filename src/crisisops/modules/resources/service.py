@@ -1,12 +1,12 @@
-from datetime import date
+from datetime import date, datetime, timezone
 from typing import Any
 
 from fastapi import HTTPException, status
 
 from crisisops.modules.resources.models import Resource, implementos
 from crisisops.modules.resources.repository import ResourcesRepository
-from crisisops.modules.resources.schemas import ImplementoIn, ImplementoOut
-
+from crisisops.modules.resources.schemas import ImplementoIn, ImplementoOut, ValidacionCertificacionIn, ValidacionCertificacionOut
+from crisisops.core.exceptions import DomainError
 
 class ResourcesService:
 
@@ -67,4 +67,50 @@ class ResourcesService:
             anio=implemento.año,
             tipoUso=implemento.tipo_uso,
             estadoFisico=implemento.estado_fisico,
+        )
+
+    def validar_certificacion_operador(
+        self, datos: ValidacionCertificacionIn
+    ) -> ValidacionCertificacionOut:
+        operador = self.repository.obtener_operador_por_id(datos.responder_id)
+        if not operador:
+            raise DomainError(f"El operador con ID {datos.responder_id} no existe.")
+
+        if not operador.is_active:
+            raise DomainError(f"El operador con ID {datos.responder_id} se encuentra inactivo.")
+
+        habilidad = self.repository.obtener_habilidad_por_codigo(datos.skill_code)
+        if not habilidad:
+            raise DomainError(f"La habilidad '{datos.skill_code}' no existe.")
+
+        if not self.repository.operador_tiene_habilidad(datos.responder_id, datos.skill_code):
+            raise DomainError(
+                f"El operador {datos.responder_id} no posee la habilidad requerida '{datos.skill_code}'."
+            )
+
+        certificaciones = self.repository.obtener_certificaciones_operador(
+            datos.responder_id, datos.skill_code
+        )
+        if not certificaciones:
+            raise DomainError(
+                f"El operador {datos.responder_id} no cuenta con certificación para '{datos.skill_code}'."
+            )
+
+        ahora = datetime.now(timezone.utc)
+        vigente = any(
+            (c.issued_at.replace(tzinfo=timezone.utc) if c.issued_at.tzinfo is None else c.issued_at)
+            <= ahora
+            < (c.expires_at.replace(tzinfo=timezone.utc) if c.expires_at.tzinfo is None else c.expires_at)
+            for c in certificaciones
+        )
+        if not vigente:
+            raise DomainError(
+                f"La certificación del operador {datos.responder_id} para '{datos.skill_code}' está vencida o no vigente."
+            )
+
+        return ValidacionCertificacionOut(
+            valido=True,
+            responder_id=datos.responder_id,
+            skill_code=datos.skill_code,
+            mensaje="Certificación válida.",
         )

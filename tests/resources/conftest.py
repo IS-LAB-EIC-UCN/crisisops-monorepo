@@ -6,9 +6,11 @@ from sqlalchemy.pool import StaticPool
 
 from crisisops.core.database import Base, get_db
 from crisisops.main import app
+from crisisops.modules.personnel.models import Certification, Responder, ResponderSkill, Skill
 from crisisops.modules.resources.models import Resource, Vehiculo, implementos
 
-TABLAS_RECURSOS = [Resource.__table__, implementos.__table__, Vehiculo.__table__]
+TABLAS_RECURSOS = Resource.__table__,implementos.__table__,Vehiculo.__table__,Responder.__table__,Skill.__table__,ResponderSkill.__table__,Certification.__table__
+
 
 @pytest.fixture()
 def db_session():

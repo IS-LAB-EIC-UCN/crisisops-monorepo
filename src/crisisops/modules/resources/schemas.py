@@ -68,3 +68,16 @@ class ImplementoIn(BaseModel):
 
 
 ResourceDetailOut = ImplementoOut | VehiculoOut | ResourceBaseOut
+
+
+class ValidacionCertificacionIn(BaseModel):
+    responder_id: int = Field(gt=0, description="ID del operador a validar")
+    skill_code: str = Field(min_length=1, max_length=50, description="Código de la habilidad requerida")
+
+
+class ValidacionCertificacionOut(BaseModel):
+    valido: bool
+    responder_id: int
+    skill_code: str
+    mensaje: str
+

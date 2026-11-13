@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from crisisops.modules.resources.models import Resource, Vehiculo, implementos
 
+from crisisops.modules.personnel.models import Certification, Responder, ResponderSkill, Skill
 
 class ResourcesRepository:
 
@@ -64,3 +65,26 @@ class ResourcesRepository:
 
     def obtener_implemento(self, id_recurso: int) -> implementos | None:
         return self.db.get(implementos, id_recurso)
+
+    def obtener_operador_por_id(self, responder_id: int) -> Responder | None:
+        return self.db.get(Responder, responder_id)
+
+    def obtener_habilidad_por_codigo(self, skill_code: str) -> Skill | None:
+        stmt = select(Skill).where(Skill.code == skill_code)
+        return self.db.scalar(stmt)
+
+    def operador_tiene_habilidad(self, responder_id: int, skill_code: str) -> bool:
+        stmt = select(ResponderSkill).where(
+            ResponderSkill.responder_id == responder_id,
+            ResponderSkill.skill_code == skill_code,
+        )
+        return self.db.scalar(stmt) is not None
+
+    def obtener_certificaciones_operador(
+        self, responder_id: int, skill_code: str
+    ) -> Sequence[Certification]:
+        stmt = select(Certification).where(
+            Certification.responder_id == responder_id,
+            Certification.skill_code == skill_code,
+        )
+        return self.db.scalars(stmt).all()
