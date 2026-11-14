@@ -139,10 +139,16 @@ class PersonnelService:
             eligible_responders.append(responder)
         return eligible_responders
 
-      
+    def validate_brigade_coverage(
+        self,
+        responder_ids: list[int],
+        required_skills: list[str],
+    ) -> list[str]:
+        """
+        Comprueba que la brigada cubra cada competencia requerida al menos una vez.
 
-    def validate_brigade_coverage(self,responder_ids: list[int],required_skills: list[str],) -> list[str]:
-       
+        Retorna la lista de competencias faltantes (vacía si la brigada es apta).
+        """
         missing_skills = []
 
         for skill in required_skills:
@@ -152,5 +158,5 @@ class PersonnelService:
             )
             if not covered and skill not in missing_skills:
                 missing_skills.append(skill)
-    
+
         return missing_skills
