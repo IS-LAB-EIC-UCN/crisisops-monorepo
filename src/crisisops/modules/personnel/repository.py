@@ -1,4 +1,6 @@
-from sqlalchemy import select
+from datetime import datetime
+
+from sqlalchemy import and_, exists, select
 
 from crisisops.modules.personnel.models import (
     AssignmentStatus,
@@ -76,3 +78,35 @@ class PersonnelRepository:
             Shift.end_time >= end_time,
         )
         return self.db.scalars(stmt).first()
+
+    def get_available_on_shift_responders(self, moment: datetime) -> list[Responder]:
+        """Brigadistas con disponibilidad base activa, en turno vigente y sin asignación activa."""
+        has_active_shift = exists(
+            select(Shift.id).where(
+                and_(
+                    Shift.responder_id == Responder.id,
+                    Shift.start_time <= moment,
+                    Shift.end_time > moment,
+                )
+            )
+        )
+
+        has_active_assignment = exists(
+            select(PersonnelAssignment.id).where(
+                and_(
+                    PersonnelAssignment.responder_id == Responder.id,
+                    PersonnelAssignment.status.in_(
+                        [AssignmentStatus.ACTIVE, AssignmentStatus.RESERVED]
+                    ),
+                    PersonnelAssignment.start_at <= moment,
+                    PersonnelAssignment.end_at > moment,
+                )
+            )
+        )
+
+        stmt = select(Responder).where(
+            Responder.is_active.is_(True),
+            has_active_shift,
+            ~has_active_assignment,
+        )
+        return list(self.db.scalars(stmt).all())

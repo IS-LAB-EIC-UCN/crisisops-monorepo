@@ -1,5 +1,7 @@
+from datetime import UTC, datetime
+
 from crisisops.core.exceptions import DomainError
-from crisisops.modules.personnel.models import PersonnelAssignment
+from crisisops.modules.personnel.models import PersonnelAssignment, Responder
 from crisisops.modules.personnel.repository import PersonnelRepository
 from crisisops.modules.personnel.schemas import AssignmentCreate
 
@@ -144,3 +146,10 @@ class PersonnelService:
             eligible_responders.append(responder)
 
         return eligible_responders
+
+    def filter_available_on_shift(
+        self, moment: datetime | None = None
+    ) -> list[Responder]:
+        """Retorna el personal de turno y disponible en el momento indicado."""
+        target_moment = moment or datetime.now(UTC)
+        return self.repository.get_available_on_shift_responders(target_moment)

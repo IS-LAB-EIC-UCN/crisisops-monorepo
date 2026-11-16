@@ -30,3 +30,7 @@ class ResponderOut(BaseModel):
     role: str
     is_active: bool
     model_config = ConfigDict(from_attributes=True)
+
+class AvailableRespondersResponse(BaseModel):
+    count: int
+    responders: list[ResponderOut]
