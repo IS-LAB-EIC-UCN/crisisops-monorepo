@@ -10,6 +10,7 @@ from sqlalchemy.pool import StaticPool
 
 from crisisops.core.database import Base, get_db
 from crisisops.main import app
+from crisisops.modules.operations.dependencies import get_missions_service, get_operations_service
 from crisisops.modules.operations.models import (
     Mission,
     MissionPersonnelAssignment,
@@ -18,9 +19,10 @@ from crisisops.modules.operations.models import (
     MissionResourceRequirement,
     Operation,
 )
-from crisisops.modules.operations.repository import OperationsRepository
-from crisisops.modules.operations.router import get_operations_service
-from crisisops.modules.operations.service import OperationsService
+from crisisops.modules.operations.repository.mission import MissionsRepository
+from crisisops.modules.operations.repository.operation import OperationsRepository
+from crisisops.modules.operations.service.mission import MissionsService
+from crisisops.modules.operations.service.operation import OperationsService
 
 # Solo se crean las tablas de este módulo; las de otros grupos no se tocan.
 OPERATIONS_TABLES = [
@@ -132,6 +134,12 @@ def api_client(
     app.dependency_overrides[get_operations_service] = lambda: OperationsService(
         get_emergency_status,
         OperationsRepository(db_session),
+        get_resource_types=resource_catalog.get_codes,
+        get_personnel_profiles=personnel_catalog.get_codes,
+    )
+    app.dependency_overrides[get_missions_service] = lambda: MissionsService(
+        get_emergency_status,
+        MissionsRepository(db_session),
         get_resource_types=resource_catalog.get_codes,
         get_personnel_profiles=personnel_catalog.get_codes,
     )
