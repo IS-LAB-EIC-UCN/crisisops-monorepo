@@ -1,42 +1,18 @@
 from sqlalchemy import select
-from sqlalchemy.orm import Session, selectinload
+from sqlalchemy.orm import selectinload
 
 from crisisops.modules.operations.models import (
     Mission,
     MissionPersonnelRequirement,
     MissionResourceRequirement,
     MissionStatus,
-    Operation,
 )
+from crisisops.modules.operations.repository.operation import OperationsRepository
 from crisisops.shared.enums import Priority
 
 
-class OperationsRepository:
-    """Acceso a persistencia del módulo operations."""
-
-    def __init__(self, db_session: Session) -> None:
-        self.db = db_session
-
-    # HU-01: operaciones
-
-    def create_operation(
-        self,
-        emergency_id: int,
-        name: str,
-        priority: Priority,
-    ) -> Operation:
-        operation = Operation(
-            emergency_id=emergency_id,
-            name=name,
-            priority=priority,
-        )
-        self.db.add(operation)
-        self.db.flush()
-        self.db.refresh(operation)
-        return operation
-
-    def get_operation(self, operation_id: int) -> Operation | None:
-        return self.db.get(Operation, operation_id)
+class MissionsRepository(OperationsRepository):
+    """Acceso a persistencia de misiones y requisitos (HU-02). Hereda sesión, commit y rollback."""
 
     # HU-02: misiones
 
@@ -102,9 +78,3 @@ class OperationsRepository:
         self.db.flush()
         self.db.refresh(requirement)
         return requirement
-
-    def commit(self) -> None:
-        self.db.commit()
-
-    def rollback(self) -> None:
-        self.db.rollback()
