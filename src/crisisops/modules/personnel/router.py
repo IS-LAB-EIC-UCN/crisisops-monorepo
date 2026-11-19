@@ -7,6 +7,8 @@ from crisisops.modules.personnel.repository import PersonnelRepository
 from crisisops.modules.personnel.schemas import (
     AssignmentCreate,
     AssignmentResponse,
+    BrigadeValidationRequest,
+    BrigadeValidationResponse,
     EligibilityQuery,
     ResponderOut,
 )
@@ -76,3 +78,34 @@ def find_eligible_responders(
     )
     
     return responders
+
+@router.post(
+    "/brigades/validate",
+    response_model=BrigadeValidationResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Validar cobertura de competencias de una brigada"
+)
+def validate_brigade(
+    request: BrigadeValidationRequest,
+    service: PersonnelService = Depends(get_personnel_service) # noqa: B008
+):
+    # Llama a la lógica de verificación implementada por Gabriel (T3.2)
+    missing_skills = service.validate_brigade_coverage(
+        responder_ids=request.responder_ids,
+        required_skills=request.required_skills
+    )
+
+    is_valid = len(missing_skills) == 0
+    response_data = BrigadeValidationResponse(
+        is_valid=is_valid,
+        missing_skills=missing_skills
+    )
+
+    # Criterio: Dada una brigada incompleta, retorna HTTP 422 con el detalle
+    if not is_valid:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=response_data.model_dump()
+        )
+
+    return response_data

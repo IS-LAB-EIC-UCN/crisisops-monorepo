@@ -1,14 +1,14 @@
 import pytest
 
 from crisisops.core.exceptions import DomainError
-from crisisops.modules.operations.models import Operation
-from crisisops.modules.operations.schemas import OperationCreate
-from crisisops.modules.operations.service import (
+from crisisops.modules.operations.exceptions import (
     EmergencyNotActive,
     EmergencyNotFound,
     EmergencyUnavailable,
-    OperationsService,
 )
+from crisisops.modules.operations.models import Operation
+from crisisops.modules.operations.schemas.operation import OperationCreate
+from crisisops.modules.operations.service.operation import OperationsService
 
 
 def test_active_emergency_allows_continuation() -> None:
