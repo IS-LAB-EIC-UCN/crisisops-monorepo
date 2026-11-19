@@ -10,8 +10,19 @@ class OperationsRepository:
     def __init__(self, db_session: Session) -> None:
         self.db = db_session
 
-    def create_operation(self, emergency_id: int, name: str, priority: Priority) -> Operation:
-        operation = Operation(emergency_id=emergency_id, name=name, priority=priority)
+    # HU-01: operaciones
+
+    def create_operation(
+        self,
+        emergency_id: int,
+        name: str,
+        priority: Priority,
+    ) -> Operation:
+        operation = Operation(
+            emergency_id=emergency_id,
+            name=name,
+            priority=priority,
+        )
         self.db.add(operation)
         self.db.flush()
         self.db.refresh(operation)
