@@ -5,15 +5,18 @@ from typing import ParamSpec, TypeVar
 
 from sqlalchemy.orm import Session
 
-from crisisops.modules.emergencies.enums import EmergencyStatus, Role
+from crisisops.modules.emergencies.actor import CurrentUser
+from crisisops.modules.emergencies.audit import record_audit_event
+from crisisops.modules.emergencies.enums import AuditAction, EmergencyStatus, Role
 from crisisops.modules.emergencies.exceptions import (
     EmergencyNotFound,
     EmergencyValidationError,
     ExceptionActionRequiresJustification,
     InvalidEmergencyUpdate,
     InvalidStateTransition,
+    UnauthorizedAction,
 )
-from crisisops.modules.emergencies.models import Emergency
+from crisisops.modules.emergencies.models import Emergency, EmergencyAuditLog
 from crisisops.modules.emergencies.repository import EmergenciesRepository
 from crisisops.modules.emergencies.schemas import (
     EmergencyCreate,
@@ -64,9 +67,17 @@ def _transactional(func: Callable[P,R]) -> Callable[P,R]:
             self.db.rollback() #si hubo culquier error, deshace todo
             raise #propaga el mismo error
     return wrapper
+#Quién puede hacer qué? 
+REGISTER_ROLES = (Role.OPERATOR, Role.COORDINATOR)
+EDIT_ROLES = (Role.OPERATOR, Role.COORDINATOR)
+VALIDATE_ROLES = (Role.COORDINATOR,)
 
-VALIDATE_ROLES = (Role.OPERATOR)
-
+def _require_role(actor: CurrentUser, allowed: tuple[Role, ...], action: str) -> None:
+    if actor.role not in allowed:
+        raise UnauthorizedAction(
+            f"El rol {actor.role.value} no puede {action}. "
+            f"Roles permitidos: {', '.join(role.value for role in allowed)}."
+        )
 
 class EmergenciesService:
     """Casos de uso y reglas de negocio del módulo emergencies."""
@@ -84,8 +95,10 @@ class EmergenciesService:
 
     #función para registrar una emergencia
     @_transactional
-    def create_emergency(self, payload: EmergencyCreate) -> Emergency:
-        
+    def create_emergency(self, payload: EmergencyCreate, actor: CurrentUser) -> Emergency:
+
+        _require_role(actor, REGISTER_ROLES, "registrar emergencias")
+
         emergency = Emergency(
             title = payload.title,
             type = payload.type,
@@ -101,6 +114,14 @@ class EmergenciesService:
 
         self.repo.add(emergency)
 
+        record_audit_event(
+            self.db,
+            emergency_id=emergency.id,
+            action=AuditAction.CREATED,
+            actor=actor.username,
+            actor_role=actor.role,
+            new_status=emergency.status,
+        )
         return emergency
 
     #función para detecta campos faltantes, incompletos o que no cumplen lo requisitos.
@@ -136,8 +157,9 @@ class EmergenciesService:
     def validate_emergency(self,
                            emergency_id: int,
                            decision: ValidationDecision,
-                           actor_role: Role
+                           actor: CurrentUser
                            ) -> Emergency:
+        _require_role(actor, VALIDATE_ROLES, "validar emergencias")
         # obtenemos la emergencia que deseamos validar por medio de su ID
         emergency = self.get_or_raise(emergency_id)
 
@@ -168,8 +190,20 @@ class EmergenciesService:
                 f"{emergency.status.value}, se esperaba REPORTED"
             )
 
+        previous_status = emergency.status
         emergency.status = target #se asigna a la emergencia su nuevo status
-        
+
+        record_audit_event(
+            self.db,
+            emergency_id=emergency.id,
+            action=AuditAction.VALIDATED if decision.approved else
+            AuditAction.REJECTED,
+            actor=actor.username,
+            actor_role=actor.role,
+            previous_status=previous_status,
+            new_status=target,
+            reason=decision.reason,
+        )
         return emergency
 
 
@@ -179,8 +213,13 @@ class EmergenciesService:
         self,
         emergency_id: int,
         payload: EmergencyUpdate,
+        actor = CurrentUser,
     ) -> Emergency:
+        _require_role(actor, EDIT_ROLES, "editar emergencias")
         emergency = self.get_or_raise(emergency_id)
+
+        audited_changes = {}
+        
 
         if emergency.status != EmergencyStatus.REPORTED:
             raise InvalidStateTransition(
@@ -201,12 +240,29 @@ class EmergenciesService:
                 raise InvalidEmergencyUpdate(
                     f"El campo {field} no puede ser null."
                 )
+            previous_value = getattr(emergency, field)
+            if previous_value != value:
+                audited_changes[field] = (previous_value, value)
 
             setattr(emergency, field, value)
 
         self.repo.update(emergency)
 
+        if audited_changes:
+            record_audit_event(
+                self.db,
+                emergency_id=emergency.id,
+                action=AuditAction.UPDATED,
+                actor=actor.username,
+                actor_role=actor.role,
+                changes=audited_changes,
+            )
+
         return emergency
     
+    @_transactional
+    def get_audit_trail(self, emergency_id: int) -> list[EmergencyAuditLog]:
+        self.get_or_raise(emergency_id)
+        return self.repo.list_audit_logs(emergency_id)
         
         

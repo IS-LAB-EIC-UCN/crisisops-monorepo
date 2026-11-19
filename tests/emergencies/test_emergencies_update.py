@@ -1,6 +1,7 @@
 import pytest
 
-from crisisops.modules.emergencies.enums import EmergencyStatus
+from crisisops.modules.emergencies.actor import CurrentUser
+from crisisops.modules.emergencies.enums import EmergencyStatus, Role
 from crisisops.modules.emergencies.exceptions import (
     EmergencyNotFound,
     InvalidEmergencyUpdate,
@@ -13,6 +14,7 @@ from crisisops.modules.emergencies.schemas import (
 from crisisops.modules.emergencies.service import EmergenciesService
 
 URL = "/api/v1/emergencies"
+OPERATOR = CurrentUser("operador1", Role.OPERATOR)
 
 VALID_REPORT = {
     "type": "FIRE",
@@ -66,7 +68,7 @@ def test_update_only_changes_sent_fields(client):
 
 def test_empty_update_is_rejected(db_session):
     emergency = EmergenciesService(db_session).create_emergency(
-        EmergencyCreate.model_validate(VALID_REPORT)
+        EmergencyCreate.model_validate(VALID_REPORT), OPERATOR
     )
     service = EmergenciesService(db_session)
 
@@ -74,6 +76,7 @@ def test_empty_update_is_rejected(db_session):
         service.update_emergency(
             emergency.id,
             EmergencyUpdate(),
+            OPERATOR,
         )
 
 
@@ -84,6 +87,7 @@ def test_update_nonexistent_emergency(db_session):
         service.update_emergency(
             9999,
             EmergencyUpdate(title="Título actualizado"),
+            OPERATOR,
         )
 
 def test_validated_emergency_cannot_be_updated(client, db_session):

@@ -8,9 +8,10 @@ from fastapi.routing import APIRoute
 from sqlalchemy.orm import Session
 
 from crisisops.core.database import get_db
-from crisisops.modules.emergencies.enums import Role
+from crisisops.modules.emergencies.actor import CurrentUser, get_current_user
 from crisisops.modules.emergencies.exceptions import DomainError, EmergencyValidationError
 from crisisops.modules.emergencies.schemas import (
+    AuditLogRead,
     EmergencyCreate,
     EmergencyRead,
     EmergencyUpdate,
@@ -88,16 +89,17 @@ def check_emergency_completeness_validation(
 def validate_emergency(
     emergency_id: int,
     payload: ValidationDecision, 
-    #ValidationDecision contiene la decisión si se aprueba o rechaza la validación y el motivo.
-    actor_role: Role, 
+    #ValidationDecision contiene la decisión si se aprueba o rechaza la validación y el motivo. 
     db: Annotated[Session, Depends(get_db)], #Llamamos a la función db en database.py, 
     #depends toma lo que se le pase y lo inyecta como parámetro
     #Acá puede ir otro parámetro como User que use depends y se le pasa una función que verifique 
     #si el usuario actual pertenece a los roles en _OPERATOR_UP
+    user: Annotated[CurrentUser, Depends(get_current_user)],
+    #user sale de las cabeceras X-Actor y X-Actor-Role
 ) -> EmergencyRead: 
     #Esto indica que se devuelve una  clase EmergencyRead en schemas.py 
     #que hereda de BaseModel de pydantic
-    emergency = EmergenciesService(db).validate_emergency(emergency_id, payload, actor_role) 
+    emergency = EmergenciesService(db).validate_emergency(emergency_id, payload, user) 
     return EmergencyRead.model_validate(emergency) #se valida
 
 
@@ -115,12 +117,14 @@ def update_emergency(
     emergency_id: int,
     payload: EmergencyUpdate,
     db: Annotated[Session, Depends(get_db)],
+    user: Annotated[CurrentUser, Depends(get_current_user)],
 ) -> EmergencyRead:
     service = EmergenciesService(db)
 
     emergency = service.update_emergency(
         emergency_id,
         payload,
+        user,
     )
 
     return EmergencyRead.model_validate(emergency)
@@ -136,10 +140,11 @@ def update_emergency(
 
 def create_emegency(
     payload : EmergencyCreate,
-    db: Annotated[Session, Depends(get_db)]
+    db: Annotated[Session, Depends(get_db)],
+    user: Annotated[CurrentUser, Depends(get_current_user)],
 ) -> EmergencyRead:
     
-    emergency = EmergenciesService(db).create_emergency(payload)
+    emergency = EmergenciesService(db).create_emergency(payload, user)
     return EmergencyRead.model_validate(emergency)
 
 
@@ -161,3 +166,22 @@ def get_emergency(
 ) -> EmergencyRead:
     emergency = EmergenciesService(db).get_or_raise(emergency_id)
     return EmergencyRead.model_validate(emergency)
+
+@router.get(
+    "/{emergency_id}/audit",
+    response_model=list[AuditLogRead],
+    status_code=status.HTTP_200_OK,
+    summary="Consultar la trazabilidad de una emergencia",
+    description=(
+        "Lista, en orden cronológico, quién realizó cada modificación (actor y rol), "
+        "cuando"
+        "(occurred_at) y qué la información cambió"
+    ),
+)
+def get_emergency_audit(
+    emergency_id: int,
+    db: Annotated[Session, Depends(get_db)],
+) -> list[AuditLogRead]:
+    logs = EmergenciesService(db).get_audit_trail(emergency_id)
+    return [AuditLogRead.model_validate(log) for log in logs]
+    

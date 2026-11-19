@@ -45,3 +45,8 @@ class InvalidEmergencyUpdate(DomainError):
     """La actualización de la emergencia no es válida."""
     http_status = 422
     code = "invalid_emergency_update"
+
+class UnauthorizedAction(DomainError):
+    """El rol del actor no permite realizar la acción"""
+    http_status = 403
+    code = "unauthorized_action"

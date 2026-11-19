@@ -4,10 +4,11 @@ Los contratos consumidos por otros módulos deben mantenerse pequeños,
 explícitos y versionables.
 """
 from datetime import datetime
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from crisisops.modules.emergencies.enums import EmergencyStatus, EmergencyType
+from crisisops.modules.emergencies.enums import AuditAction, EmergencyStatus, EmergencyType, Role
 from crisisops.shared.enums import Severity
 
 
@@ -112,4 +113,18 @@ class EmergencyValidate(BaseModel):
     status: EmergencyStatus
     reported_by: str
     created_at: datetime
-    
+
+class AuditLogRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    emergency_id: int
+    action: AuditAction
+    actor: str
+    actor_role: Role
+    occurred_at: datetime
+    previous_status: EmergencyStatus | None
+    new_status: EmergencyStatus | None
+    reason: str | None
+    changes: dict[str, Any] | None
+

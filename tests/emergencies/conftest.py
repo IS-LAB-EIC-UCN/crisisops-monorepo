@@ -36,16 +36,33 @@ def db_session():
     Base.metadata.drop_all(bind=engine) 
 
 @pytest.fixture()
-def client(db_session):
-    #hace que el endpoint use la sesión de prueba y no la BD real
-    app.dependency_overrides[get_db] = lambda: db_session 
-    #cuando un endopint solicite la dependencia get_db, utiliza db_session en su lugar
-    with TestClient(app) as test_client: 
-        '''TestClient es una clase que permite enviar 
-        solicitudes HTTP de prueba a una aplicación FastAPi'''
-        yield test_client #entrega el cliente al test mediante yield
-    app.dependency_overrides.clear() #la sustitución se deja de aplicar
+def anonymous_client(db_session):
+    """Cliente SIN cabeceras X-Actor / X-Actor-Role: cada prueba envía las suyas."""
+    app.dependency_overrides[get_db] = lambda: db_session
+    with TestClient(app) as test_client:
+        yield test_client
+    app.dependency_overrides.clear()
 
+
+@pytest.fixture()
+def client(db_session):
+    """Cliente que actúa como `coordinador1` con rol COORDINATOR en todas sus peticiones
+    (puede registrar, editar y validar). Para probar otro rol usa `headers_for(...)`."""
+    app.dependency_overrides[get_db] = lambda: db_session
+    headers = {"X-Actor": "coordinador1", "X-Actor-Role": "COORDINATOR"}
+    with TestClient(app, headers=headers) as test_client:
+        yield test_client
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture()
+def headers_for():
+    """headers_for("OPERATOR") -> cabeceras de un usuario con ese rol."""
+
+    def _headers(role: str, username: str | None = None) -> dict[str, str]:
+        return {"X-Actor": username or f"{role.lower()}1", "X-Actor-Role": role}
+
+    return _headers
 '''
 Paso a paso cuando pytest ejecuta un test:
 1-Prepara la base de datos temporal
