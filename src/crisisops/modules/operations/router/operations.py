@@ -1,29 +1,10 @@
-from typing import Annotated
+from fastapi import APIRouter, HTTPException, status
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
-
-from crisisops.core.database import get_db
 from crisisops.core.exceptions import DomainError
-from crisisops.modules.operations.repository import OperationsRepository
-from crisisops.modules.operations.schemas import OperationCreate, OperationResponse
-from crisisops.modules.operations.service import (
-    OperationsService,
-    get_emergency_status_from_group_a,
-)
+from crisisops.modules.operations.dependencies import ServiceDEP
+from crisisops.modules.operations.schemas.operation import OperationCreate, OperationResponse
 
 router = APIRouter(prefix="/operations", tags=["Grupo D - Operaciones y despacho"])
-
-
-def get_operations_service(
-    db: Annotated[Session, Depends(get_db)],
-) -> OperationsService:
-    """Crea el caso de uso para cada petición usando el repositorio local."""
-    repository = OperationsRepository(db)
-    return OperationsService(get_emergency_status_from_group_a, repository)
-
-
-ServiceDEP = Annotated[OperationsService, Depends(get_operations_service)]
 
 
 @router.get("/health")

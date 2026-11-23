@@ -124,12 +124,8 @@ class PersonnelService:
                     if certification is None:
                         skills_valid = False
                         break
-
-        
             if not skills_valid:
-                continue
-
-          
+                continue          
             overlapping_assignments = (
                 self.repository.get_overlapping_assignments(
                     responder_id=responder.id,
@@ -137,14 +133,12 @@ class PersonnelService:
                     end_time=end_time,
                 )
             )
-
-           
+    
             if overlapping_assignments:
                 continue
 
             
             eligible_responders.append(responder)
-
         return eligible_responders
 
     def filter_available_on_shift(
@@ -153,3 +147,25 @@ class PersonnelService:
         """Retorna el personal de turno y disponible en el momento indicado."""
         target_moment = moment or datetime.now(UTC)
         return self.repository.get_available_on_shift_responders(target_moment)
+
+    def validate_brigade_coverage(
+        self,
+        responder_ids: list[int],
+        required_skills: list[str],
+    ) -> list[str]:
+        """
+        Comprueba que la brigada cubra cada competencia requerida al menos una vez.
+
+        Retorna la lista de competencias faltantes (vacía si la brigada es apta).
+        """
+        missing_skills = []
+
+        for skill in required_skills:
+            covered = any(
+                self.repository.responder_has_skill(responder_id, skill) is not None
+                for responder_id in responder_ids
+            )
+            if not covered and skill not in missing_skills:
+                missing_skills.append(skill)
+
+        return missing_skills
