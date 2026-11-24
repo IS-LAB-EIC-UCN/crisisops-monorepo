@@ -213,7 +213,7 @@ class EmergenciesService:
         self,
         emergency_id: int,
         payload: EmergencyUpdate,
-        actor = CurrentUser,
+        actor: CurrentUser,
     ) -> Emergency:
         _require_role(actor, EDIT_ROLES, "editar emergencias")
         emergency = self.get_or_raise(emergency_id)
