@@ -143,8 +143,9 @@ def create_emegency(
     db: Annotated[Session, Depends(get_db)],
     user: Annotated[CurrentUser, Depends(get_current_user)],
 ) -> EmergencyRead:
-    
+
     emergency = EmergenciesService(db).create_emergency(payload, user)
+
     return EmergencyRead.model_validate(emergency)
 
 
@@ -184,4 +185,3 @@ def get_emergency_audit(
 ) -> list[AuditLogRead]:
     logs = EmergenciesService(db).get_audit_trail(emergency_id)
     return [AuditLogRead.model_validate(log) for log in logs]
-    

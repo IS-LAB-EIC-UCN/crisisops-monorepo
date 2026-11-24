@@ -1,38 +1,18 @@
 from collections.abc import Callable
 
-from crisisops.core.exceptions import DomainError
+from crisisops.modules.operations.exceptions import (
+    EmergencyNotActive,
+    EmergencyNotFound,
+    EmergencyUnavailable,
+    OperationNotFound,
+)
+from crisisops.modules.operations.integrations import (
+    get_personnel_profiles_from_group_c,
+    get_resource_types_from_group_b,
+)
 from crisisops.modules.operations.models import Operation
-from crisisops.modules.operations.repository import OperationsRepository
-from crisisops.modules.operations.schemas import OperationCreate
-
-
-class EmergencyNotFound(DomainError):
-    """La emergencia indicada no existe en Grupo A."""
-
-    status_code = 422
-
-
-class EmergencyNotActive(DomainError):
-    """La emergencia existe, pero su estado no permite crear operaciones."""
-
-    status_code = 409
-
-
-class EmergencyUnavailable(DomainError):
-    """No se pudo consultar a Grupo A (caído o aún no integrado)."""
-
-    status_code = 503
-
-
-class OperationNotFound(DomainError):
-    """No existe una operación con el id consultado."""
-
-    status_code = 404
-
-
-def get_emergency_status_from_group_a(emergency_id: int) -> str | None:
-    """Consulta el estado en Grupo A. Mientras A no esté integrado en develop, no responde."""
-    raise ConnectionError("El módulo de emergencias (Grupo A) aún no está integrado.")
+from crisisops.modules.operations.repository.operation import OperationsRepository
+from crisisops.modules.operations.schemas.operation import OperationCreate
 
 
 class OperationsService:
@@ -42,8 +22,12 @@ class OperationsService:
         self,
         get_emergency_status: Callable[[int], str | None],
         repository: OperationsRepository,
+        get_resource_types: Callable[[], set[str]] = get_resource_types_from_group_b,
+        get_personnel_profiles: Callable[[], set[str]] = get_personnel_profiles_from_group_c,
     ) -> None:
         self._get_emergency_status = get_emergency_status
+        self._get_resource_types = get_resource_types
+        self._get_personnel_profiles = get_personnel_profiles
         self.repository = repository
 
     def validate_emergency(self, emergency_id: int) -> None:
