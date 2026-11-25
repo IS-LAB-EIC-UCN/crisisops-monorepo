@@ -9,25 +9,42 @@
 .pill.none{background:#eef1f5;color:#64748b}
 .query-form{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 16px}
 .query-form input{max-width:260px}
+.actor{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;background:#fff;border:1px solid #e1e8f0;border-radius:12px;padding:14px 16px;margin:0 0 20px}
+.actor .field{min-width:180px;flex:1}
+.actor .hint{flex-basis:100%}
+.audit{margin-top:16px}
+.audit h3{font-size:15px;margin:0 0 10px}
+.audit-list{list-style:none;margin:0;padding:0;border-left:2px solid #d9e2ec}
+.audit-item{position:relative;padding:0 0 14px 16px;font-size:13px;line-height:1.5}
+.audit-item::before{content:"";position:absolute;left:-6px;top:5px;width:10px;height:10px;border-radius:50%;background:#087e79}
+.audit-item.rejected::before{background:#b33636}
+.audit-item.updated::before{background:#936600}
+.audit-head{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline}
+.audit-meta{color:#64748b;font-size:12px}
+.audit-change{margin:4px 0 0;color:#334155;overflow-wrap:anywhere}
+.audit-reason{margin:4px 0 0;color:#475569;font-style:italic}
 </style></head><body>
 <header class="top"><div class="brand">Crisis<span>Ops</span></div><small>Grupo A · Emergencias y evaluación</small></header>
 <main class="shell"><div class="eyebrow">Panel de gestión · Sprint 1</div><h1 class="heading">Registro de emergencias</h1><p class="intro">Registra una emergencia con datos mínimos en estado <b>REPORTED</b>. Después completa sus antecedentes y valida el reporte.</p>
+<section class="actor" aria-label="Identidad del actor"><div class="field"><label for="actor_name">Usuario (X-Actor)</label><input id="actor_name" value="operador1" maxlength="50" autocomplete="off"></div><div class="field"><label for="actor_role">Rol (X-Actor-Role)</label><select id="actor_role"><option value="OPERATOR">Operador (OPERATOR)</option><option value="COORDINATOR">Coordinador (COORDINATOR)</option><option value="SUPERVISOR">Supervisor (SUPERVISOR)</option></select></div><span class="hint">Identifica quién actúa para la trazabilidad. No es autenticación: el servidor no lo verifica. Solo el COORDINATOR puede validar o rechazar; el SUPERVISOR solo consulta.</span></section>
 <div class="layout"><section class="panel"><h2>Nueva emergencia</h2><p class="muted">Los campos con * son obligatorios para el registro inicial. Los demás pueden completarse antes de validar.</p>
 <form id="emergencyForm" novalidate><div class="fields">
-<div class="field"><label for="type">Tipo de emergencia <span>*</span></label><select id="type"><option value="">Seleccionar tipo</option><option value="FIRE">Incendio (FIRE)</option><option value="FLOOD">Inundación (FLOOD)</option><option value="ACCIDENT">Accidente (ACCIDENT)</option><option value="MEDICAL">Emergencia médica (MEDICAL)</option><option value="OTHER">Otro (OTHER)</option></select></div>
+<div class="field"><label for="type">Tipo de emergencia <span>*</span></label><select id="type"><option value="">Seleccionar tipo</option><option value="FIRE">Incendio (FIRE)</option><option value="FLOOD">Inundación (FLOOD)</option><option value="EARTHQUAKE">Sismo (EARTHQUAKE)</option><option value="LANDSLIDE">Deslizamiento (LANDSLIDE)</option><option value="MAJOR_ACCIDENT">Accidente grave (MAJOR_ACCIDENT)</option><option value="HAZMAT">Materiales peligrosos (HAZMAT)</option><option value="OTHER">Otro (OTHER)</option></select></div>
 <div class="field" id="detailWrap" hidden><label for="type_detail">Especificar  <span>*</span></label><input id="type_detail" placeholder="Indica el tipo de emergencia"></div>
 <div class="field full"><label for="title">Título <span>*</span></label><input id="title" maxlength="120" placeholder="Ej.: Incendio en sector residencial"></div>
 <div class="field full"><label for="location_description">Ubicación <span>*</span></label><input id="location_description" placeholder="Ej.: Avenida Costanera, Coquimbo"></div>
 <div class="field full"><label for="description">Descripción (información entregada) </label><textarea id="description" placeholder="Antecedentes, situación observada y contexto..."></textarea><span class="hint">Necesaria para la validación en esta demostración.</span></div>
 <div class="field full"><label for="reported_by">Reportado por</label><input id="reported_by" placeholder="Nombre o identificador del informante"><span class="hint">Necesario para la validación en esta demostración.</span></div>
+<div class="field full"><label for="severity">Severidad</label><select id="severity"><option value="">Sin asignar</option><option value="LOW">Baja (LOW)</option><option value="MEDIUM">Media (MEDIUM)</option><option value="HIGH">Alta (HIGH)</option><option value="CRITICAL">Crítica (CRITICAL)</option></select><span class="hint">Necesaria para la validación.</span></div>
 <div class="field"><label for="created_at">Fecha de creación</label><input id="created_at" readonly placeholder="Se asigna al registrar"></div>
 
 <div class="field"><label for="updated_at">Última actualización</label><input id="updated_at" readonly placeholder="Se asigna al registrar"></div>
 </div><div class="actions"><button class="primary" type="submit" id="save">Registrar emergencia</button><button type="button" id="clear">Nueva emergencia</button></div></form></section>
 <aside class="panel"><h2>Revisión del reporte</h2><p class="muted">Comprueba los datos y valida una emergencia registrada.</p>
-<div class="summary"><div class="summary-row"><span>Identificador (id)</span><strong id="idText">Sin registrar</strong></div><div class="summary-row"><span>Estado (status)</span><span class="pill" id="status">Sin registrar</span></div><div class="summary-row"><span>Campos para validar</span><strong id="completion">0 de 5</strong></div></div>
+<div class="summary"><div class="summary-row"><span>Identificador (id)</span><strong id="idText">Sin registrar</strong></div><div class="summary-row"><span>Estado (status)</span><span class="pill" id="status">Sin registrar</span></div><div class="summary-row"><span>Campos para validar</span><strong id="completion">0 de 6</strong></div></div>
 <div class="notice" id="message" role="status" aria-live="polite">Completa los datos mínimos y registra la emergencia.</div>
-<div class="actions"><button type="button" class="primary" id="validate">Validar reporte</button><button type="button" id="check">Revisar campos</button></div>
+<div class="field" style="margin-top:14px"><label for="reject_reason">Motivo del rechazo</label><input id="reject_reason" placeholder="Obligatorio solo al rechazar"></div>
+<div class="actions"><button type="button" class="primary" id="validate">Validar reporte</button><button type="button" id="reject">Rechazar reporte</button><button type="button" id="check">Revisar campos</button></div>
 <div class="history"><strong>Historias del Sprint 1</strong><p>HU-04 · Registro inicial (REPORTED)</p><p>HU-05 · Detección de datos faltantes</p><p>HU-01 · Validación (VALIDATED)</p></div>
 </aside></div>
 <section class="panel" id="queryPanel" style="margin-top:20px">
@@ -63,6 +80,7 @@
         <strong id="q_updated"></strong>
     </div>
 </div>
+<div class="audit" id="auditBox" hidden><h3>Trazabilidad (quién, cuándo y qué cambió)</h3><p class="muted" id="auditEmpty" hidden>Sin movimientos registrados.</p><ol class="audit-list" id="auditList"></ol></div>
 <div class="notice" id="queryMessage" role="status" aria-live="polite">
     Ingresa el id de una emergencia para consultar su estado y severidad.
 </div>
@@ -81,6 +99,11 @@ const STATUS_KIND=
 const SEVERITY_LABEL={LOW:'Baja (LOW)', MEDIUM:'Media (MEDIUM)', HIGH:'Alta (HIGH)',
     CRITICAL:'Crítica (CRITICAL)'
 };
+const ACTION_LABEL={CREATED:'Creada',UPDATED:'Modificada',VALIDATED:'Validada',REJECTED:'Rechazada'};
+const ROLE_LABEL={OPERATOR:'Operador',COORDINATOR:'Coordinador',SUPERVISOR:'Supervisor'};
+const FIELD_LABEL={type:'Tipo',type_detail:'Especificación',title:'Título',description:'Descripción',
+    severity:'Severidad',location_description:'Ubicación',date_time:'Fecha y hora'};
+const shown=v=>v===null||v===undefined||v===''?'(vacío)':String(v);
 function queryNotify(message, kind='')
 {el('queryMessage').textContent=message,el('queryMessage').className='notice '+kind}
 async function fetchEmergency(id){
@@ -89,6 +112,13 @@ async function fetchEmergency(id){
     catch{throw new Error('No se pudo conectar con el servidor. Verifica que esté en ejecución y permita conexiones desde esta página.')}
     if(response.status===404)throw new Error(`No existe una emergencia con id ${id}.`);
     if(!response.ok)throw new Error(`El servidor respondió con el código ${response.status}.`);
+    return response.json();
+}
+async function fetchAudit(id){
+    let response;
+    try{response=await fetch(`${EMERGENCIES_URL}/${id}/audit`)}
+    catch{throw new Error('No se pudo conectar con el servidor.')}
+    if(!response.ok)throw new Error(`La trazabilidad respondió con el código ${response.status}.`);
     return response.json();
 }
 function renderEmergency(e){
@@ -102,10 +132,36 @@ function renderEmergency(e){
     el('q_updated').textContent=new Date(e.updated_at).toLocaleString('es-CL');
     el('queryResult').hidden=false;
 }
+function auditLine(entry){
+    const li=document.createElement('li');
+    li.className='audit-item '+entry.action.toLowerCase();
+    const head=document.createElement('div');head.className='audit-head';
+    const title=document.createElement('strong');
+    title.textContent=ACTION_LABEL[entry.action]||entry.action;
+    const meta=document.createElement('span');meta.className='audit-meta';
+    meta.textContent=`${entry.actor} (${ROLE_LABEL[entry.actor_role]||entry.actor_role}) · ${new Date(entry.occurred_at).toLocaleString('es-CL')}`;
+    head.append(title,meta);li.append(head);
+    const line=(text,cls)=>{const p=document.createElement('p');p.className=cls;p.textContent=text;li.append(p)};
+    if(entry.previous_status||entry.new_status)
+        line(`Estado: ${entry.previous_status||'—'} → ${entry.new_status||'—'}`,'audit-change');
+    if(entry.changes)for(const [field,c] of Object.entries(entry.changes))
+        line(`${FIELD_LABEL[field]||field}: ${shown(c.before)} → ${shown(c.after)}`,'audit-change');
+    if(entry.reason)line('Motivo: '+entry.reason,'audit-reason');
+    return li;
+}
+function renderAudit(entries){
+    el('auditList').replaceChildren(...entries.map(auditLine));
+    el('auditEmpty').hidden=entries.length>0;
+    el('auditBox').hidden=false;
+}
 async function queryEmergency(id){
     el('queryBtn').disabled=true;
-    try{renderEmergency(await fetchEmergency(id));
-        queryNotify('Datos actualizados desde el backend.', 'success')
+    el('auditBox').hidden=true;
+    try{
+        renderEmergency(await fetchEmergency(id));
+        queryNotify('Datos actualizados desde el backend.','success');
+        try{renderAudit(await fetchAudit(id))}
+        catch(error){queryNotify('Datos actualizados, pero no se pudo cargar la trazabilidad. '+error.message,'error')}
     }
     catch(error){el('queryResult').hidden=true;queryNotify(error.message,'error')}
     finally{el('queryBtn').disabled=false}
@@ -117,21 +173,170 @@ el('queryForm').onsubmit=event=>{
     queryEmergency(id);
 };
 
+const FIELDS=['type','type_detail','title','description','severity','location_description','reported_by'];
 const initial=['type','title','location_description'];
-const validation=['type','title','location_description','description','reported_by'];
-const labels={type:'Tipo de emergencia',type_detail:'Especificación del tipo',title:'Título',location_description:'Ubicación',description:'Descripción detallada',reported_by:'Reportado por'};
+const validation=['type','title','location_description','description','severity','reported_by'];
+const labels={type:'Tipo de emergencia',type_detail:'Especificación del tipo',title:'Título',
+    location_description:'Ubicación',description:'Descripción detallada',severity:'Severidad',
+    reported_by:'Reportado por',date_time:'Fecha y hora'};
+const ACTOR_RE=/^[A-Za-z0-9_.-]{3,50}$/;
 let record=null, dirty=false;
 const value=id=>el(id).value.trim();
 const requiredForValidation=()=>[...validation,...(value('type')==='OTHER'?['type_detail']:[])];
 const missing=fields=>fields.filter(id=>!value(id));
 function status(label,kind=''){el('status').textContent=label;el('status').className='pill '+kind}
 function notify(message,kind=''){el('message').textContent=message;el('message').className='notice '+kind}
-function stamp(){return new Date().toLocaleString('es-CL')}
-function snapshot(){return Object.fromEntries(['type','type_detail','title','description','location_description','reported_by'].map(id=>[id,value(id)]))}
-function refresh(){const req=requiredForValidation();el('completion').textContent=`${req.length-missing(req).length} de ${req.length}`;el('detailWrap').hidden=value('type')!=='OTHER';if(record){dirty=JSON.stringify(snapshot())!==JSON.stringify(record.data);if(dirty)notify('Hay cambios sin guardar. Guarda la actualización antes de validar.')}}
-['type','type_detail','title','description','location_description','reported_by'].forEach(id=>el(id).addEventListener('input',refresh));
-el('emergencyForm').onsubmit=e=>{e.preventDefault();const absent=missing([...initial,...(value('type')==='OTHER'?['type_detail']:[])]);if(absent.length){notify('No se puede registrar. Faltan: '+absent.map(id=>labels[id]).join(', ')+'.','error');return}const now=stamp();if(!record){record={id:'LOCAL-'+String(Date.now()).slice(-7),status:'REPORTED',created_at:now,data:snapshot()};el('created_at').value=now}else{record.data=snapshot();if(record.status==='VALIDATED')record.status='REPORTED'}el('updated_at').value=now;el('idText').textContent=record.id;status(record.status,record.status==='VALIDATED'?'ok':'');dirty=false;el('save').textContent='Guardar cambios';notify('Emergencia guardada localmente en estado '+record.status+'. Puedes revisar los campos y solicitar validación.','success');refresh()};
-el('check').onclick=()=>{const req=requiredForValidation(),absent=missing(req);notify(absent.length?'Para validar faltan: '+absent.map(id=>labels[id]).join(', ')+'.':'Todos los campos requeridos para validar están completos.',absent.length?'error':'success')};
-el('validate').onclick=()=>{if(!record){notify('Primero registra la emergencia con los campos mínimos.','error');return}if(dirty){notify('Guarda los cambios antes de validar.','error');return}const absent=missing(requiredForValidation());if(absent.length){notify('La emergencia sigue en REPORTED. Para validarla faltan: '+absent.map(id=>labels[id]).join(', ')+'.','error');return}record.status='VALIDATED';el('updated_at').value=stamp();status('VALIDATED','ok');notify('Reporte validado correctamente. Estado actualizado a VALIDATED.','success')};
-el('clear').onclick=()=>{el('emergencyForm').reset();record=null;dirty=false;el('created_at').value='';el('updated_at').value='';el('idText').textContent='Sin registrar';el('save').textContent='Registrar emergencia';status('Sin registrar');notify('Completa los datos mínimos y registra la emergencia.');refresh()};refresh();
+const stamp=iso=>new Date(iso).toLocaleString('es-CL');
+const snapshot=()=>Object.fromEntries(FIELDS.map(id=>[id,value(id)]));
+function busy(flag){['save','validate','reject','check'].forEach(id=>{el(id).disabled=flag})}
+
+function refresh(){
+    const req=requiredForValidation();
+    el('completion').textContent=`${req.length-missing(req).length} de ${req.length}`;
+    el('detailWrap').hidden=value('type')!=='OTHER';
+    if(record){
+        dirty=JSON.stringify(snapshot())!==JSON.stringify(record.data);
+        if(dirty)notify('Hay cambios sin guardar. Guarda la actualización antes de validar.');
+    }
+}
+FIELDS.forEach(id=>el(id).addEventListener('input',refresh));
+
+function actorHeaders(){
+    const name=value('actor_name');
+    if(!ACTOR_RE.test(name))throw new Error('El usuario (X-Actor) debe tener entre 3 y 50 caracteres: letras, números, punto, guion o guion bajo.');
+    return {'X-Actor':name,'X-Actor-Role':el('actor_role').value};
+}
+function errorText(code,data){
+    if(data&&data.message){
+        let text=data.message;
+        if(data.errors){
+            const list=Object.entries(data.errors).map(([f,e])=>`• ${labels[f]||f}: ${e.message||e}`);
+            if(list.length)text+='\n'+list.join('\n');
+        }
+        return text;
+    }
+    if(data&&Array.isArray(data.detail))
+        return 'Datos no válidos:\n'+data.detail.map(d=>`• ${d.loc.slice(1).join('.')}: ${d.msg}`).join('\n');
+    return `El servidor respondió con el código ${code}.`;
+}
+async function api(path,method,body,withActor=true){
+    const headers=withActor?actorHeaders():{};
+    const options={method,headers};
+    if(body!==undefined){headers['Content-Type']='application/json';options.body=JSON.stringify(body)}
+    let response;
+    try{response=await fetch(`${EMERGENCIES_URL}${path}`,options)}
+    catch{throw new Error('No se pudo conectar con el servidor. Verifica que esté en ejecución.')}
+    let data=null;
+    try{data=await response.json()}catch{}
+    if(!response.ok)throw new Error(errorText(response.status,data));
+    return data;
+}
+
+function show(saved){
+    record={id:saved.id,status:saved.status,data:snapshot()};
+    dirty=false;
+    el('created_at').value=stamp(saved.created_at);
+    el('updated_at').value=stamp(saved.updated_at);
+    el('idText').textContent=saved.id;
+    status(STATUS_LABEL[saved.status]||saved.status,STATUS_KIND[saved.status]||'');
+    el('reported_by').readOnly=true;
+    el('save').textContent='Guardar cambios';
+    refresh();
+}
+function syncQuery(){el('query_id').value=record.id;queryEmergency(record.id)}
+
+function createBody(){
+    const body={date_time:new Date().toISOString(),reported_by:value('reported_by')||value('actor_name')};
+    for(const id of FIELDS){
+        if(id==='reported_by'||!value(id))continue;
+        if(id==='type_detail'&&value('type')!=='OTHER')continue;
+        body[id]=value(id);
+    }
+    return body;
+}
+function updateBody(){
+    const now=snapshot(),body={};
+    for(const id of FIELDS){
+        if(id==='reported_by')continue;
+        if(now[id]!==record.data[id]&&now[id]!=='')body[id]=now[id];
+    }
+    if(now.type!=='OTHER')delete body.type_detail;
+    return body;
+}
+
+el('emergencyForm').onsubmit=async e=>{
+    e.preventDefault();
+    const absent=missing([...initial,...(value('type')==='OTHER'?['type_detail']:[])]);
+    if(absent.length){notify('No se puede registrar. Faltan: '+absent.map(id=>labels[id]).join(', ')+'.','error');return}
+    if(record&&record.status!=='REPORTED'){notify(`La emergencia está en ${record.status}; solo se puede editar en REPORTED.`,'error');return}
+    busy(true);
+    try{
+        let saved;
+        if(!record){
+            saved=await api('','POST',createBody());
+            show(saved);
+            notify('Emergencia registrada en el servidor en estado '+saved.status+'.','success');
+        }else{
+            const cleared=FIELDS.filter(id=>id!=='reported_by'&&record.data[id]&&!value(id));
+            if(cleared.length){notify('El servidor no permite dejar en blanco campos ya guardados: '+cleared.map(id=>labels[id]).join(', ')+'.','error');return}
+            const body=updateBody();
+            if(!Object.keys(body).length){notify('No hay cambios para guardar.');return}
+            saved=await api(`/${record.id}`,'PATCH',body);
+            show(saved);
+            notify('Cambios guardados. Quedan registrados en la trazabilidad.','success');
+        }
+        syncQuery();
+    }catch(error){notify(error.message,'error')}
+    finally{busy(false)}
+};
+
+el('check').onclick=async()=>{
+    if(!record){
+        const absent=missing(requiredForValidation());
+        notify(absent.length?'Para validar faltarán: '+absent.map(id=>labels[id]).join(', ')+'. Registra primero la emergencia.':'Datos completos. Registra la emergencia para que el servidor los revise.',absent.length?'error':'success');
+        return;
+    }
+    if(dirty){notify('Guarda los cambios: el servidor revisa lo que está guardado.','error');return}
+    busy(true);
+    try{
+        const r=await api(`/${record.id}/fields`,'GET',undefined,false);
+        notify(r.ready_for_validation
+            ?'Todos los campos requeridos para validar están completos.'
+            :'Para validar faltan o son inválidos:\n'+Object.entries(r.errors_fields).map(([f,x])=>`• ${labels[f]||f}: ${x.message}`).join('\n'),
+            r.ready_for_validation?'success':'error');
+    }catch(error){notify(error.message,'error')}
+    finally{busy(false)}
+};
+
+async function decide(approved){
+    if(!record){notify('Primero registra la emergencia con los campos mínimos.','error');return}
+    if(dirty){notify('Guarda los cambios antes de decidir.','error');return}
+    const reason=value('reject_reason');
+    if(!approved&&!reason){notify('Para rechazar debes indicar el motivo.','error');return}
+    busy(true);
+    try{
+        const body={approved};
+        if(reason)body.reason=reason;
+        show(await api(`/${record.id}/validate`,'POST',body));
+        notify(approved?'Reporte validado. Estado: VALIDATED.':'Reporte rechazado. Estado: REJECTED.','success');
+        syncQuery();
+    }catch(error){notify(error.message,'error')}
+    finally{busy(false)}
+}
+el('validate').onclick=()=>decide(true);
+el('reject').onclick=()=>decide(false);
+
+el('clear').onclick=()=>{
+    el('emergencyForm').reset();
+    record=null;dirty=false;
+    el('reported_by').readOnly=false;
+    el('reject_reason').value='';
+    el('created_at').value='';el('updated_at').value='';
+    el('idText').textContent='Sin registrar';
+    el('save').textContent='Registrar emergencia';
+    status('Sin registrar');
+    notify('Completa los datos mínimos y registra la emergencia.');
+    refresh();
+};
+refresh();
 </script></body></html>
