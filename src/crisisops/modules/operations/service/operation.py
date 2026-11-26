@@ -46,8 +46,8 @@ class OperationsService:
             )
 
     def create_operation(self, data: OperationCreate) -> Operation:
-        self.validate_emergency(data.emergency_id)
         try:
+            self.validate_emergency(data.emergency_id)
             operation = self.repository.create_operation(
                 emergency_id=data.emergency_id, name=data.name, priority=data.priority
             )

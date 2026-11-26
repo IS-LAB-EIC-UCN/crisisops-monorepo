@@ -1,3 +1,4 @@
+from functools import partial
 from typing import Annotated
 
 from fastapi import Depends
@@ -21,7 +22,7 @@ def get_operations_service(
     """Crea el caso de uso para cada petición usando el repositorio local."""
     repository = OperationsRepository(db)
     return OperationsService(
-        get_emergency_status_from_group_a,
+        partial(get_emergency_status_from_group_a, db),
         repository,
         get_resource_types=get_resource_types_from_group_b,
         get_personnel_profiles=get_personnel_profiles_from_group_c,
@@ -34,7 +35,7 @@ def get_missions_service(
     """Igual que get_operations_service, pero con el service y repositorio de misiones."""
     repository = MissionsRepository(db)
     return MissionsService(
-        get_emergency_status_from_group_a,
+        partial(get_emergency_status_from_group_a, db),
         repository,
         get_resource_types=get_resource_types_from_group_b,
         get_personnel_profiles=get_personnel_profiles_from_group_c,
