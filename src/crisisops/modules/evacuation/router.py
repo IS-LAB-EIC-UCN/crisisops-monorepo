@@ -8,24 +8,33 @@ from crisisops.modules.evacuation.exceptions import (
     AdmisionNoEncontrada,
     OcupacionInconsistente,
     RefugioNoEncontrado,
+    RefugioNoHabilitado,
     RefugioSinCupos,
     SalidaYaRegistrada,
 )
 from crisisops.modules.evacuation.models import EvacuationStatus
 from crisisops.modules.evacuation.repository import (
     AdmisionRepository,
+    EstadoRefugioRepository,
     SalidaRepository,
     SituacionRepository,
 )
 from crisisops.modules.evacuation.schemas import (
     AdmisionIn,
     AdmisionOut,
+    EstadoRefugioIn,
+    EstadoRefugioOut,
     EvacuationOut,
     SalidaIn,
     SalidaOut,
     SituacionRefugioOut,
 )
-from crisisops.modules.evacuation.service import AdmisionService, SalidaService, SituacionService
+from crisisops.modules.evacuation.service import (
+    AdmisionService,
+    EstadoRefugioService,
+    SalidaService,
+    SituacionService,
+)
 
 router = APIRouter(prefix="/evacuation", tags=["Grupo E - Evacuación, refugios y alertas"])
 
@@ -80,13 +89,17 @@ def get_admision_service(db: Annotated[Session, Depends(get_db)]) -> AdmisionSer
     return AdmisionService(AdmisionRepository(db))
 
 
+def get_estado_refugio_service(db: Annotated[Session, Depends(get_db)]) -> EstadoRefugioService:
+    return EstadoRefugioService(EstadoRefugioRepository(db))
+
+
 @router.post(
     "/shelters/{refugio_id}/admissions",
     response_model=AdmisionOut,
     status_code=status.HTTP_201_CREATED,
     responses={
         404: {"description": "Refugio no encontrado"},
-        409: {"description": "No existen cupos suficientes en el refugio"},
+        409: {"description": "El refugio no está habilitado o no tiene cupos suficientes"},
     },
     summary="Registrar el ingreso de una persona o grupo",
 )
@@ -103,7 +116,7 @@ def registrar_admision(
         )
     except RefugioNoEncontrado as error:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
-    except RefugioSinCupos as error:
+    except (RefugioNoHabilitado, RefugioSinCupos) as error:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(error)) from error
 
 
@@ -132,3 +145,21 @@ def registrar_salida(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
     except (SalidaYaRegistrada, OcupacionInconsistente) as error:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(error)) from error
+
+
+@router.patch(
+    "/shelters/{refugio_id}/status",
+    response_model=EstadoRefugioOut,
+    status_code=status.HTTP_200_OK,
+    summary="Habilitar o deshabilitar las admisiones de un refugio (Historia 1)",
+    responses={404: {"description": "Refugio no encontrado"}},
+)
+def cambiar_estado_refugio(
+    refugio_id: Annotated[int, Path(gt=0, description="ID del refugio")],
+    datos: EstadoRefugioIn,
+    service: Annotated[EstadoRefugioService, Depends(get_estado_refugio_service)],
+) -> EstadoRefugioOut:
+    try:
+        return service.cambiar_estado(refugio_id=refugio_id, nuevo_estado=datos.status)
+    except RefugioNoEncontrado as error:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
