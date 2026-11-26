@@ -11,6 +11,8 @@ from crisisops.modules.personnel.schemas import (
     BrigadeValidationResponse,
     EligibilityQuery,
     ResponderOut,
+    ResponderSkillCreate,
+    ResponderSkillOut,
 )
 from crisisops.modules.personnel.service import PersonnelService
 

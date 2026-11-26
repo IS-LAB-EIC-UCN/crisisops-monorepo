@@ -18,6 +18,17 @@ class AssignmentResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+#H06 - creacion de skill
+class ResponderSkillCreate(BaseModel):
+    skill_code: str = Field(min_length=1, max_length=50)
+
+# relacion skill con responder
+class ResponderSkillOut(BaseModel):
+    responder_id: int
+    skill_code: str
+
+    model_config = ConfigDict(from_attributes=True)
+
 class EligibilityQuery(BaseModel):
     start_time: datetime
     end_time: datetime

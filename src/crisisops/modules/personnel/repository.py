@@ -1,4 +1,5 @@
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 
 from crisisops.modules.personnel.models import (
     AssignmentStatus,
@@ -45,7 +46,20 @@ class PersonnelRepository:
     def get_active_responders(self):
         """Brigadistas activos."""
         return list(self.db.scalars(select(Responder).where(Responder.is_active.is_(True))))
+    
+    # ------H06(T6.2)  -----------
+    def find_active_responders_by_skills(
+        self, skill_codes: list[str]
+    ) -> list[Responder]:
+        stmt = select(Responder).where(Responder.is_active.is_(True))
 
+        for skill_code in dict.fromkeys(skill_codes):
+            stmt = stmt.where(
+                Responder.skills.any(ResponderSkill.skill_code == skill_code)
+            )
+
+        return list(self.db.scalars(stmt))
+    
     def get_skill(self, skill_code):
         """Competencia por código, o None."""
         return self.db.scalars(select(Skill).where(Skill.code == skill_code)).first()
@@ -57,6 +71,31 @@ class PersonnelRepository:
             ResponderSkill.skill_code == skill_code,
         )
         return self.db.scalars(stmt).first()
+    # ------- H06 (T6.1)-----------------
+    def get_responder(self, responder_id: int) -> Responder | None:
+        return self.db.get(Responder, responder_id)
+
+    def add_responder_skill(
+        self, responder_id: int, skill_code: str
+    ) -> ResponderSkill:
+        existing = self.responder_has_skill(responder_id, skill_code)
+        if existing is not None:
+            return existing
+
+        link = ResponderSkill(responder_id=responder_id, skill_code=skill_code)
+        self.db.add(link)
+
+        try:
+            self.db.commit()
+        except IntegrityError:
+            self.db.rollback()
+            existing = self.responder_has_skill(responder_id, skill_code)
+            if existing is None:
+                raise
+            return existing
+
+        return link
+    # fin H06(T6.1) -----------------
 
     def get_valid_certification(self, responder_id, skill_code, start_time, end_time):
         """Certificación vigente durante todo [start_time, end_time), o None."""

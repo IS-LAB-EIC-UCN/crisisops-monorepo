@@ -1,5 +1,5 @@
 from crisisops.core.exceptions import DomainError
-from crisisops.modules.personnel.models import PersonnelAssignment
+from crisisops.modules.personnel.models import PersonnelAssignment, ResponderSkill
 from crisisops.modules.personnel.repository import PersonnelRepository
 from crisisops.modules.personnel.schemas import AssignmentCreate
 
@@ -53,7 +53,18 @@ class PersonnelService:
         )
 
         return self.repository.create_assignment(assignment)
+    #------H06 (T6.1)--------
+    def register_responder_skill(
+        self, responder_id: int, skill_code: str
+    ) -> ResponderSkill:
+        if self.repository.get_responder(responder_id) is None:
+            raise DomainError(f"Brigadista con ID {responder_id} no encontrado.")
 
+        if self.repository.get_skill(skill_code) is None:
+            raise DomainError(f"Competencia {skill_code} no encontrada.")
+
+        return self.repository.add_responder_skill(responder_id, skill_code)
+    #fin H06 (T6.1)----------
     def get_eligible_responders(
         self,
         required_skills,
@@ -70,9 +81,20 @@ class PersonnelService:
         RN-1: no tener asignaciones activas solapadas.
         """
 
+        # ajustes H06 (T6.2)--------
         eligible_responders = []
 
-        responders = self.repository.get_active_responders()
+        # RN-2: cada candidato posee todas las competencias solicitadas.
+        responders = self.repository.find_active_responders_by_skills(required_skills)
+        if not responders:
+            return eligible_responders
+
+        # RN-3: el requisito de certificación depende de la competencia.
+        skills_requiring_certification = []
+        for skill_code in dict.fromkeys(required_skills):
+            skill = self.repository.get_skill(skill_code)
+            if skill is not None and skill.requires_certification:
+                skills_requiring_certification.append(skill_code)
 
         for responder in responders:
 
@@ -87,43 +109,20 @@ class PersonnelService:
             if covering_shift is None:
                 continue
 
-            skills_valid = True
-
-           
-            for required_skill in required_skills:
-
-            
-                responder_skill = self.repository.responder_has_skill(
+            # RN-3: cada certificación exigida debe cubrir todo el período.
+            certifications_valid = all(
+                self.repository.get_valid_certification(
                     responder.id,
-                    required_skill,
+                    skill_code,
+                    start_time,
+                    end_time,
                 )
-
-                
-                if responder_skill is None:
-                    skills_valid = False
-                    break
-
-                
-                skill = self.repository.get_skill(required_skill)
-
-                
-                if skill is not None and skill.requires_certification:
-
-                    certification = (
-                        self.repository.get_valid_certification(
-                            responder.id,
-                            required_skill,
-                            start_time,
-                            end_time,
-                        )
-                    )
-
-                    
-                    if certification is None:
-                        skills_valid = False
-                        break
-            if not skills_valid:
-                continue          
+                is not None
+                for skill_code in skills_requiring_certification
+            )
+            if not certifications_valid:
+                continue
+                     
             overlapping_assignments = (
                 self.repository.get_overlapping_assignments(
                     responder_id=responder.id,
