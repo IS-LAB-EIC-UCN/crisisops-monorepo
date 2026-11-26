@@ -1,11 +1,8 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
-from crisisops.modules.evacuation.models import (
-    EvacuationStatus,
-    ShelterAvailability,
-)
+from crisisops.modules.evacuation.models import EvacuationStatus, ShelterStatus
 
 
 class EvacuationOut(BaseModel):
@@ -41,12 +38,35 @@ class SituacionRefugioOut(BaseModel):
     movimientos_recientes: list[MovimientoPersonasOut]
 
 
-class ShelterAvailabilityUpdate(BaseModel):
-    availability: ShelterAvailability
+class SalidaIn(BaseModel):
+    """Datos para registrar la salida de una persona o grupo"""
+
+    admission_id: int = Field(gt=0, description="ID de la admisión ACTIVE que deja el refugio.")
 
 
-class ShelterAvailabilityOut(BaseModel):
+class SalidaOut(BaseModel):
+    admision_id: int
+    refugio_id: int
+    codigo_evacuado: str
+    cupos_liberados: int
+    ocupacion_actual: int
+    capacidad: int
+    cupos_disponibles: int
+    estado_refugio: ShelterStatus
+    fecha_salida: datetime
+
+
+class AdmisionIn(BaseModel):
+    evacuee_code: str = Field(min_length=1, max_length=50)
+    people_count: int = Field(gt=0)
+
+
+class AdmisionOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
-    availability: ShelterAvailability
+    shelter_id: int
+    evacuee_code: str
+    people_count: int
+    status: str
+    admitted_at: datetime
