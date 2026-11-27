@@ -37,3 +37,11 @@ class RefugioSinCupos(DomainError):
             f"Cupos disponibles: {cupos_disponibles}; "
             f"personas solicitadas: {personas_solicitadas}."
         )
+
+
+class RefugioNoHabilitado(DomainError):
+    def __init__(self, refugio_id: int, estado: str) -> None:
+        super().__init__(
+            f"El refugio {refugio_id} está en estado {estado} y no admite ingresos; "
+            "debe estar OPEN para registrar admisiones."
+        )
