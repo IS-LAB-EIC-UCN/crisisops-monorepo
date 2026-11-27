@@ -1,4 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from datetime import datetime
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from crisisops.core.database import get_db
@@ -7,6 +10,7 @@ from crisisops.modules.personnel.repository import PersonnelRepository
 from crisisops.modules.personnel.schemas import (
     AssignmentCreate,
     AssignmentResponse,
+    AvailableRespondersResponse,
     BrigadeValidationRequest,
     BrigadeValidationResponse,
     EligibilityQuery,
@@ -79,6 +83,34 @@ def find_eligible_responders(
     
     return responders
 
+@router.get(
+    "/responders/available",
+    response_model=AvailableRespondersResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Filtrar personal de turno y disponible",
+    description=(
+        "Retorna el conteo y listado de brigadistas que tienen disponibilidad "
+        "activa y un turno vigente de forma simultánea."
+    ),
+)
+def get_available_responders(
+    moment: Annotated[
+        datetime | None,
+        Query(
+            description=(
+                "Fecha y hora de consulta en formato ISO 8601 (por defecto: hora actual UTC)"
+            )
+        ),
+    ] = None,
+    service: PersonnelService = Depends(get_personnel_service),  # noqa: B008
+) -> AvailableRespondersResponse:
+    responders = service.filter_available_on_shift(moment=moment)
+    return AvailableRespondersResponse(
+        count=len(responders),
+        responders=[ResponderOut.model_validate(r) for r in responders],
+    )
+
+
 @router.post(
     "/brigades/validate",
     response_model=BrigadeValidationResponse,
@@ -109,3 +141,4 @@ def validate_brigade(
         )
 
     return response_data
+
