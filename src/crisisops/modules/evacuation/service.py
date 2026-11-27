@@ -6,6 +6,7 @@ from crisisops.modules.evacuation.exceptions import (
     AdmisionNoEncontrada,
     OcupacionInconsistente,
     RefugioNoEncontrado,
+    RefugioNoHabilitado,
     RefugioSinCupos,
     SalidaYaRegistrada,
 )
@@ -17,16 +18,20 @@ from crisisops.modules.evacuation.models import (
 )
 from crisisops.modules.evacuation.repository import (
     AdmisionRepository,
+    EstadoRefugioRepository,
     SalidaRepository,
     SituacionRepository,
 )
 from crisisops.modules.evacuation.schemas import (
     AdmisionOut,
+    EstadoRefugioOut,
     EvacuationOut,
     MovimientoPersonasOut,
     SalidaOut,
     SituacionRefugioOut,
 )
+
+ESTADOS_SIN_INGRESOS = (ShelterStatus.PLANNED.value, ShelterStatus.CLOSED.value)
 
 
 class SituacionService:
@@ -123,6 +128,9 @@ class AdmisionService:
             if refugio is None:
                 raise RefugioNoEncontrado(refugio_id)
 
+            if refugio.status in ESTADOS_SIN_INGRESOS:
+                raise RefugioNoHabilitado(refugio_id, refugio.status)
+
             cupos_disponibles = refugio.capacity - refugio.current_occupancy
             if personas > cupos_disponibles:
                 raise RefugioSinCupos(refugio_id, max(0, cupos_disponibles), personas)
@@ -202,4 +210,42 @@ class SalidaService:
             cupos_disponibles=max(0, refugio.capacity - refugio.current_occupancy),
             estado_refugio=ShelterStatus(refugio.status),
             fecha_salida=admision.departed_at,
+        )
+
+
+class EstadoRefugioService:
+    def __init__(self, repository: EstadoRefugioRepository) -> None:
+        self.repository = repository
+
+    def cambiar_estado(self, refugio_id: int, nuevo_estado: ShelterStatus) -> EstadoRefugioOut:
+        try:
+            refugio = self.repository.get_refugio_bloqueado(refugio_id)
+            if refugio is None:
+                raise RefugioNoEncontrado(refugio_id)
+
+            estado_anterior = ShelterStatus(refugio.status)
+
+            if nuevo_estado == ShelterStatus.CLOSED:
+                estado_final = ShelterStatus.CLOSED
+            elif refugio.current_occupancy >= refugio.capacity:
+                estado_final = ShelterStatus.FULL
+            else:
+                estado_final = ShelterStatus.OPEN
+
+            if estado_final != estado_anterior:
+                refugio.status = estado_final.value
+                self.repository.confirmar()
+        except Exception:
+            self.repository.deshacer()
+            raise
+
+        return EstadoRefugioOut(
+            refugio_id=refugio.id,
+            nombre=refugio.name,
+            estado_anterior=estado_anterior,
+            estado_actual=estado_final,
+            admite_ingresos=estado_final == ShelterStatus.OPEN,
+            ocupacion_actual=refugio.current_occupancy,
+            capacidad=refugio.capacity,
+            cupos_disponibles=max(0, refugio.capacity - refugio.current_occupancy),
         )
