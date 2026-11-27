@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class AssignmentCreate(BaseModel):
@@ -33,13 +33,11 @@ class ResponderOut(BaseModel):
 
 
 class AvailableRespondersResponse(BaseModel):
-    """Resultado del filtro de personal de turno y disponible (H04)."""
     count: int
     responders: list[ResponderOut]
 
 
 class BrigadeValidationRequest(BaseModel):
-    """Solicitud para comprobar la cobertura de competencias de una brigada (H03 - T3.1)."""
     responder_ids: list[int] = Field(
         ...,
         min_length=1,
@@ -53,7 +51,6 @@ class BrigadeValidationRequest(BaseModel):
 
 
 class BrigadeValidationResponse(BaseModel):
-    """Resultado de la validación de cobertura de brigada para los criterios de H03."""
     is_valid: bool = Field(
         ...,
         description="True si la brigada cubre todas las competencias; False en caso contrario",
@@ -62,3 +59,44 @@ class BrigadeValidationResponse(BaseModel):
         default_factory=list,
         description="Lista de competencias faltantes (vacía si la cobertura es completa)",
     )
+
+
+class SkillAssign(BaseModel):
+    skill_code: str = Field(
+        ...,
+        min_length=1,
+        description="Código de la competencia a asignar",
+    )
+
+
+class CertificationCreate(BaseModel):
+    skill_code: str = Field(
+        ...,
+        min_length=1,
+        description="Código de la competencia certificada",
+    )
+    issued_at: datetime = Field(
+        ...,
+        description="Fecha y hora de emisión",
+    )
+    expires_at: datetime = Field(
+        ...,
+        description="Fecha y hora de expiración",
+    )
+
+    @model_validator(mode="after")
+    def validate_dates(self) -> "CertificationCreate":
+        if self.expires_at <= self.issued_at:
+            raise ValueError("expires_at debe ser posterior a issued_at")
+        return self
+
+
+class CertificationResponse(BaseModel):
+    id: int
+    responder_id: int
+    skill_code: str
+    issued_at: datetime
+    expires_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+

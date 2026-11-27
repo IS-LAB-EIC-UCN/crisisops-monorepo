@@ -1,9 +1,14 @@
 from datetime import UTC, datetime
 
 from crisisops.core.exceptions import DomainError
-from crisisops.modules.personnel.models import PersonnelAssignment, Responder
+from crisisops.modules.personnel.models import (
+    Certification,
+    PersonnelAssignment,
+    Responder,
+    ResponderSkill,
+)
 from crisisops.modules.personnel.repository import PersonnelRepository
-from crisisops.modules.personnel.schemas import AssignmentCreate
+from crisisops.modules.personnel.schemas import AssignmentCreate, CertificationCreate
 
 
 class PersonnelService:
@@ -169,3 +174,36 @@ class PersonnelService:
                 missing_skills.append(skill)
 
         return missing_skills
+
+    def add_skill_to_responder(self, responder_id: int, skill_code: str) -> ResponderSkill:
+        responder = self.repository.get_responder(responder_id)
+        if responder is None:
+            raise DomainError(f"El brigadista con ID {responder_id} no existe.")
+
+        existing = self.repository.responder_has_skill(responder_id, skill_code)
+        if existing is not None:
+            raise DomainError(f"La competencia {skill_code} ya está asociada al brigadista.")
+
+        skill = self.repository.get_skill(skill_code)
+        if skill is None:
+            raise DomainError(f"La competencia {skill_code} no existe.")
+
+        assoc = ResponderSkill(responder_id=responder_id, skill_code=skill_code)
+        return self.repository.add_responder_skill(assoc)
+
+    def add_certification(self, responder_id: int, data: CertificationCreate) -> Certification:
+        responder = self.repository.get_responder(responder_id)
+        if responder is None:
+            raise DomainError(f"El brigadista con ID {responder_id} no existe.")
+
+        skill = self.repository.get_skill(data.skill_code)
+        if skill is None:
+            raise DomainError(f"La competencia {data.skill_code} no existe.")
+
+        cert = Certification(
+            responder_id=responder_id,
+            skill_code=data.skill_code,
+            issued_at=data.issued_at,
+            expires_at=data.expires_at,
+        )
+        return self.repository.add_certification(cert)

@@ -69,8 +69,10 @@ class Certification(Base):
 
     responder: Mapped[Responder] = relationship(back_populates="certifications")
 
-    def is_valid_for(self, moment: datetime) -> bool:
-        return self.issued_at <= moment < self.expires_at
+    def is_valid_for(self, start: datetime, end: datetime | None = None) -> bool:
+        if end is None:
+            return self.issued_at <= start < self.expires_at
+        return self.issued_at <= start and self.expires_at >= end
 
 
 class Shift(Base):

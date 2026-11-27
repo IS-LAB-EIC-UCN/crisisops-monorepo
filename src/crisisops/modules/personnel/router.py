@@ -13,8 +13,11 @@ from crisisops.modules.personnel.schemas import (
     AvailableRespondersResponse,
     BrigadeValidationRequest,
     BrigadeValidationResponse,
+    CertificationCreate,
+    CertificationResponse,
     EligibilityQuery,
     ResponderOut,
+    SkillAssign,
 )
 from crisisops.modules.personnel.service import PersonnelService
 
@@ -141,4 +144,47 @@ def validate_brigade(
         )
 
     return response_data
+
+
+@router.post(
+    "/responders/{responder_id}/skills",
+    status_code=status.HTTP_201_CREATED,
+    summary="Asignar una competencia a un brigadista",
+)
+def assign_skill_to_responder(
+    responder_id: int,
+    payload: SkillAssign,
+    service: PersonnelService = Depends(get_personnel_service),  # noqa: B008
+):
+    try:
+        service.add_skill_to_responder(responder_id, payload.skill_code)
+        return {"message": "Competencia asignada exitosamente"}
+    except DomainError as e:
+        msg = str(e).lower()
+        if "no existe" in msg or "not found" in msg:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) from e
+        if "ya está asociada" in msg or "duplicada" in msg:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e)) from e
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)) from e
+
+
+@router.post(
+    "/responders/{responder_id}/certifications",
+    response_model=CertificationResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Registrar una certificación para un brigadista",
+)
+def create_responder_certification(
+    responder_id: int,
+    payload: CertificationCreate,
+    service: PersonnelService = Depends(get_personnel_service),  # noqa: B008
+):
+    try:
+        return service.add_certification(responder_id, payload)
+    except DomainError as e:
+        msg = str(e).lower()
+        if "no existe" in msg or "not found" in msg:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) from e
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)) from e
+
 

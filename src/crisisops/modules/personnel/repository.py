@@ -45,8 +45,22 @@ class PersonnelRepository:
 
     # ---------- H02 (T2.3) ----------
     def get_active_responders(self):
-        """Brigadistas activos."""
         return list(self.db.scalars(select(Responder).where(Responder.is_active.is_(True))))
+
+    def get_responder(self, responder_id: int) -> Responder | None:
+        return self.db.scalars(select(Responder).where(Responder.id == responder_id)).first()
+
+    def add_responder_skill(self, responder_skill: ResponderSkill) -> ResponderSkill:
+        self.db.add(responder_skill)
+        self.db.commit()
+        self.db.refresh(responder_skill)
+        return responder_skill
+
+    def add_certification(self, certification: Certification) -> Certification:
+        self.db.add(certification)
+        self.db.commit()
+        self.db.refresh(certification)
+        return certification
 
     def get_skill(self, skill_code):
         """Competencia por código, o None."""
