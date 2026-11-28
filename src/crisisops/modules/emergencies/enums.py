@@ -25,3 +25,11 @@ class EmergencyStatus(StrEnum):
 class Role(StrEnum):
     '''Por ahora solo operador porque debemos definir que otros rolaes puede tener el sistema'''
     OPERATOR = "OPERATOR"
+    COORDINATOR = "COORDINATOR"
+    SUPERVISOR = "SUPERVISOR"
+
+class AuditAction(StrEnum):
+    CREATED = "CREATED"
+    UPDATED = "UPDATED"
+    VALIDATED = "VALIDATED"
+    REJECTED = "REJECTED"

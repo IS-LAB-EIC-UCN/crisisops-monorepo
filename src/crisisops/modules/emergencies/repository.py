@@ -1,6 +1,7 @@
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from crisisops.modules.emergencies.models import Emergency
+from crisisops.modules.emergencies.models import Emergency, EmergencyAuditLog
 from crisisops.modules.emergencies.schemas import EmergencyCreate
 
 
@@ -35,3 +36,12 @@ class EmergenciesRepository:
         self.db.add(emergency)
         self.db.flush()
         return emergency
+
+    def list_audit_logs(self, emergency_id: int) -> list[EmergencyAuditLog]:
+        statement = (
+            select(EmergencyAuditLog)
+            .where(EmergencyAuditLog.emergency_id == emergency_id)
+            .order_by(EmergencyAuditLog.occurred_at, EmergencyAuditLog.id )
+        )
+        return list(self.db.scalars(statement))
+    

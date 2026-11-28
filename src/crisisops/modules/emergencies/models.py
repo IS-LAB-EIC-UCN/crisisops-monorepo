@@ -5,13 +5,14 @@ decisión arquitectónica común documentada.
 """
 
 from datetime import UTC, datetime
+from typing import Any
 
-from sqlalchemy import DateTime, String, Text
+from sqlalchemy import JSON, DateTime, ForeignKey, String, Text
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column
 
 from crisisops.core.database import Base
-from crisisops.modules.emergencies.enums import EmergencyStatus, EmergencyType
+from crisisops.modules.emergencies.enums import AuditAction, EmergencyStatus, EmergencyType, Role
 from crisisops.shared.enums import Severity
 
 
@@ -99,3 +100,69 @@ class Emergency(Base):
         default =_utcnow, 
         onupdate = _utcnow, 
         nullable = False)
+    
+#Tabla para la trazabilidad de una emergencia
+class EmergencyAuditLog(Base):
+
+    __tablename__ = "emergency_audit_logs"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+    #Foreign Key que referencia a la emergencia auditada
+    emergency_id: Mapped[int] = mapped_column(
+        ForeignKey("emergencies.id"), 
+        nullable=False,
+        index=True)
+
+    #Acción realizada sobre la emergencia
+    action: Mapped[AuditAction] = mapped_column(
+        _enum_column(AuditAction,30),
+        nullable=False
+    )
+
+    #Valor de la cabecera X-Actor
+    actor: Mapped[str] = mapped_column(
+        String(120),
+        nullable=False)
+    actor_role: Mapped[Role] = mapped_column(
+        _enum_column(Role, 20),
+        nullable=False
+    )
+    
+    #fecha de modificación
+    occurred_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default = _utcnow,
+        nullable=False
+    )
+
+    #Status previo
+    previous_status: Mapped[EmergencyStatus | None] = mapped_column(
+        _enum_column(EmergencyStatus, 20),
+        nullable= True
+    )
+
+    #Status actual
+    new_status: Mapped[EmergencyStatus | None] = mapped_column(
+        _enum_column(EmergencyStatus, 20),
+        nullable= True
+    )
+
+    reason: Mapped[str | None] = mapped_column(
+        Text,
+        nullable= True
+    )
+
+    changes: Mapped[dict[str, Any] | None]= mapped_column(
+        JSON,
+        nullable=True
+    )
+
+
+
+
+
+
+
+
+
