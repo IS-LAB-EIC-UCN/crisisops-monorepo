@@ -32,6 +32,12 @@ class ResponderOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class AvailableRespondersResponse(BaseModel):
+    """Resultado del filtro de personal de turno y disponible (H04)."""
+    count: int
+    responders: list[ResponderOut]
+
+
 class BrigadeValidationRequest(BaseModel):
     """Solicitud para comprobar la cobertura de competencias de una brigada (H03 - T3.1)."""
     responder_ids: list[int] = Field(

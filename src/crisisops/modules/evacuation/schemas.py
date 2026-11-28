@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -70,3 +71,20 @@ class AdmisionOut(BaseModel):
     people_count: int
     status: str
     admitted_at: datetime
+
+
+class EstadoRefugioIn(BaseModel):
+    status: Literal[ShelterStatus.OPEN, ShelterStatus.CLOSED] = Field(
+        description="OPEN habilita las admisiones; CLOSED las deshabilita."
+    )
+
+
+class EstadoRefugioOut(BaseModel):
+    refugio_id: int
+    nombre: str
+    estado_anterior: ShelterStatus
+    estado_actual: ShelterStatus
+    admite_ingresos: bool
+    ocupacion_actual: int
+    capacidad: int
+    cupos_disponibles: int
